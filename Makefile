@@ -16,7 +16,7 @@ DIR_DEP = $(DIR_PROJECT)/dep
 
 SRCS_FILES_CPP:=
 
-SRCS_FILES_C:=  main.c
+SRCS_FILES_C:=  main.c xnet.c xproto_ip.c xproto_icmp.c xnet_utils.c
 
 OBJ_FILES:= $(SRCS_FILES_CPP:.cpp=.o) $(SRCS_FILES_C:.c=.o)
 $(info $(OBJ_FILES))
@@ -180,7 +180,7 @@ endif
 # ====
 # TEST 
 # ====
-test: all
+test: re
 	@echo
 	@echo $(COL_G)=== TEST === $(COL_D)
 	$(call MAKE_EXE, $(VALGRIND))
@@ -189,7 +189,7 @@ test: all
 # ===========
 # RUN PROGRAM
 # ===========
-run: all
+run: re
 	@echo
 	@echo $(COL_G)=== Executing Program === $(COL_D)
 	$(call MAKE_EXE)
