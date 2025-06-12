@@ -16,7 +16,6 @@
 #include "../inc/xnet_utils.h"
 
 #define XNET__LITTLE_ENDIAN
-#define XNET__ADDR_DST  "142.250.181.238"   ///< Google.com ip addr
 #define XNET__MSG_FMT_ADDR_INFO "\n=== ADDR INFO === \
                                  \ncannon name: %s \
                                  \nip_family: %d \

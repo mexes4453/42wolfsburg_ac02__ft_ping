@@ -69,3 +69,34 @@ void XNET_UTILS__ShowAddrIpv4(int unsigned addr)
               /* byte 1 */        (((addr&(0xff <<  8)) >>  8) & 0xff),
               /* byte 0 */        addr&(0xff));
 }
+
+
+
+
+void XNET_UTILS__ShowPacketHex(char unsigned *buf, ssize_t bufSz)
+{
+    int idxRow = 0; 
+    if (!buf) return;
+
+    printf("\nPacket => size( %ld )", bufSz);
+    for (ssize_t x=0; x<bufSz; x++)
+    {   
+        /* round of 8 split */
+        if ( (x - ((idxRow-1)*16)) == 8)
+        { 
+            printf("   ");
+        } 
+        
+
+        /* newline */
+        if (!(x%16))
+        { 
+            printf("\n%03d: => ", idxRow);
+            ++idxRow;
+        }
+
+        /* print data (byte) */
+        printf("%02x ", buf[x]);
+    }
+    printf("\n");
+}

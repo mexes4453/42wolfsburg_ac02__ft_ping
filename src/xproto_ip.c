@@ -177,6 +177,6 @@ XPROTO_IP__retCode_t XPROTO_IP__IsCheckSumValid(XPROTO_IP_t * const me)
     {
         retCode = XPROTO_IP__enRetCode_Success;
     }
-        printf("\ncalc: %04x => default: 0x%04x", checkSumCalculated, checkSumReceived);
+    printf("\ncalc: %04x => default: 0x%04x", checkSumCalculated, checkSumReceived);
     return retCode;
 }

@@ -20,5 +20,6 @@ unsigned short XNET_UTILS__CalcCheckSum16(void *b,
                                           XNET_UTILS__endianType_t endian);
 void           XNET_UTILS__ShowAddrIpv4(int unsigned addr);
 void           XNET_UTILS__Destroy(void *p);
+void           XNET_UTILS__ShowPacketHex(char unsigned *buf, ssize_t bufSz);
 
 #endif /* XNET_UTILS_H */
