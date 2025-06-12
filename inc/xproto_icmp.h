@@ -19,6 +19,15 @@
                                            \nseqnbr: 0x%x( %d ) \
                                            \ndataLen: %ld \
                                            \n"
+
+typedef enum XPROTO_ICMP__retCode_e
+{
+    XPROTO_ICMP__enRetCode_CreatePktInvPtr = -255,
+    XPROTO_ICMP__enRetCode_CreatePktMallocPtrData,
+
+
+} XPROTO_ICMP__retCode_t;
+
 typedef struct XPROTO_ICMP_s XPROTO_ICMP_t;
 /**
  * @brief ICMP struct RFC 792
@@ -39,7 +48,7 @@ struct XPROTO_ICMP_s
     void (*ParseFrom)(XPROTO_ICMP_t * const, char unsigned *, ssize_t);
     void (*ShowDetails)(XPROTO_ICMP_t * const);
     void (*Destroy)(XPROTO_ICMP_t * const);
-    void (*CreatePacket)(XPROTO_ICMP_t * const, char unsigned **,
+    int  (*CreatePacket)(XPROTO_ICMP_t * const, char unsigned **,
                                                 ssize_t,
                                                 short unsigned,
                                                 short unsigned);
@@ -52,7 +61,7 @@ void XPROTO_ICMP__ParseFrom( XPROTO_ICMP_t *me, char unsigned *buf,
                                                 ssize_t bufSz );
 void XPROTO_ICMP__ShowDetails(XPROTO_ICMP_t *me);
 void XPROTO_ICMP__Destroy(XPROTO_ICMP_t * const me);
-void XPROTO_ICMP__CreatePacket(XPROTO_ICMP_t * const me, char unsigned **buf,
+int  XPROTO_ICMP__CreatePacket(XPROTO_ICMP_t * const me, char unsigned **buf,
                                                          ssize_t datalen,
                                                          short unsigned id,
                                                          short unsigned seqNbr);

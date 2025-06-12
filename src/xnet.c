@@ -84,14 +84,14 @@ escape:
 void XNET__ShowRecvdMsg(char unsigned *buf, ssize_t bufSz)
 {
     int idxRow = 0; 
-    XPROTO_IP_t   procIp;
-    XPROTO_ICMP_t procIcmp;
-    XPROTO_IP__Ctor(&procIp);
-    XPROTO_ICMP__Ctor(&procIcmp);
+    //XPROTO_IP_t   procIp;
+    //XPROTO_ICMP_t procIcmp;
+    //XPROTO_IP__Ctor(&procIp);
+    //XPROTO_ICMP__Ctor(&procIcmp);
 
     if (!buf) return;
 
-    printf("\nReceived Message\n");
+    printf("\nMessage\n");
     for (ssize_t x=0; x<bufSz; x++)
     {   
         /* round of 8 split */
@@ -104,7 +104,7 @@ void XNET__ShowRecvdMsg(char unsigned *buf, ssize_t bufSz)
         /* newline */
         if (!(x%16))
         { 
-            printf("\n%d:=> ", idxRow);
+            printf("\n%03d: => ", idxRow);
             ++idxRow;
         }
 
@@ -112,18 +112,18 @@ void XNET__ShowRecvdMsg(char unsigned *buf, ssize_t bufSz)
         printf("%02x ", buf[x]);
     }
     printf("\n");
-    procIp.ParseFrom(&procIp, buf, bufSz);
-    procIp.ShowDetails(&procIp);
-    if ( procIp.IsCheckSumValid(&procIp) == XPROTO_IP__enRetCode_Success)
-    {
-        procIcmp.ParseFrom(&procIcmp, procIp.pData, procIp.dataLen);
-        procIcmp.ShowDetails(&procIcmp);
+    //procIp.ParseFrom(&procIp, buf, bufSz);
+    //procIp.ShowDetails(&procIp);
+    //if ( procIp.IsCheckSumValid(&procIp) == XPROTO_IP__enRetCode_Success)
+    //{
+    //    procIcmp.ParseFrom(&procIcmp, procIp.pData, procIp.dataLen);
+    //    procIcmp.ShowDetails(&procIcmp);
         /* verify checksum */
-    }
-    else
-    {
-        printf("\nfail checksum check");
-    }
+    //}
+    //else
+    //{
+    //    printf("\nfail checksum check");
+    //}
 
     //XNET__hdrIcmp_t protoIcmp;
     //memcpy((void *)&protoIcmp, (void *)&procIcmp, sizeof(procIcmp));
@@ -131,8 +131,8 @@ void XNET__ShowRecvdMsg(char unsigned *buf, ssize_t bufSz)
     //printf("\nChecksum icmp: %x\n", XNET__CalcCheckSum16((void *)&procIcmp, XNET__HDR_MIN_LEN_ICMP));
 
     /* release resources */
-    procIp.Destroy(&procIp);
-    procIcmp.Destroy(&procIcmp);
+    //procIp.Destroy(&procIp);
+    //procIcmp.Destroy(&procIcmp);
 }
 
 

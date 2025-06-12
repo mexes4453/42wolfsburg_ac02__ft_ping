@@ -77,16 +77,20 @@ void XPROTO_ICMP__Destroy(XPROTO_ICMP_t * const me)
 
 
 /* consider dynamic payload length */
-void XPROTO_ICMP__CreatePacket(XPROTO_ICMP_t * const me, char unsigned **buf,
+int XPROTO_ICMP__CreatePacket(XPROTO_ICMP_t * const me, char unsigned **buf,
                                                          ssize_t datalen,
                                                          short unsigned id,
                                                          short unsigned seqNbr)
 {
     ssize_t payloadSize;
     char unsigned *newBuf = NULL;
+    int retCode = 0;
 
-    if (!(*buf)) return ;
-
+    if (!(buf)) 
+    {
+        retCode = (int)XPROTO_ICMP__enRetCode_CreatePktInvPtr;
+        goto labelOnExit;
+    }
     payloadSize = (datalen) ? datalen : XPROTO_ICMP__PAYLOAD_SIZE;
 
     /* create the message to send */
@@ -96,16 +100,15 @@ void XPROTO_ICMP__CreatePacket(XPROTO_ICMP_t * const me, char unsigned **buf,
     me->identifier = id;
     me->seqnbr = seqNbr;
     me->pData = malloc(payloadSize * sizeof(char unsigned));
-    if (me->pData)
+    if (!(me->pData))
     {
-        memset((void *)me->pData, 'a', payloadSize);
-        me->dataLen = payloadSize;
-        me->totalPacketLen = XPROTO_ICMP__HDR_MIN_LEN + me->dataLen;
+        retCode = (int)XPROTO_ICMP__enRetCode_CreatePktMallocPtrData;
+        goto labelOnExit;
     }
-    else
-    { 
-        return ;
-    }
+
+    memset((void *)me->pData, 'a', payloadSize);
+    me->dataLen = payloadSize;
+    me->totalPacketLen = XPROTO_ICMP__HDR_MIN_LEN + me->dataLen;
 
     /* Calculate and update the checksum */
     me->checksum = me->CalcCheckSum(me);
@@ -126,6 +129,9 @@ void XPROTO_ICMP__CreatePacket(XPROTO_ICMP_t * const me, char unsigned **buf,
         /* update pointer address */
         *buf = newBuf;
     }
+labelOnExit:
+    /* clean up */
+    return (retCode);
 }
 
 

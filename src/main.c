@@ -40,7 +40,11 @@ int main(int argc, char *argv[])
     if (!sockfd) { goto escape; }
 
     /* Create icmp packet for transmission */
-    XPROTO_ICMP__CreatePacket(&icmpHdr, &ptrPacket, 0, 0x4321, 1);
+    retCode = XPROTO_ICMP__CreatePacket(&icmpHdr, &ptrPacket, 0, 0x4321, 1);
+
+    /* print packet content */
+    printf("\nretcode(%d); icmp datalen:%ld", retCode, icmpHdr.totalPacketLen);
+    XNET__ShowRecvdMsg(ptrPacket, icmpHdr.totalPacketLen);
 
     /* send data to dest address */
     if (pResult) {printf("\nSocket exist - (%d)\n", sockfd); }
