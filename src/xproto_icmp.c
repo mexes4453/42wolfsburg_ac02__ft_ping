@@ -10,7 +10,6 @@ void XPROTO_ICMP__Ctor(XPROTO_ICMP_t * const me)
     me->Destroy = XPROTO_ICMP__Destroy;
     me->CreatePacket = XPROTO_ICMP__CreatePacket;
     me->CalcCheckSum = XPROTO_ICMP__CalcCheckSum;
-    me->dstAddrLen = sizeof(struct sockaddr_in);
 }
 
 
@@ -66,183 +65,118 @@ void XPROTO_ICMP__ShowDetails(XPROTO_ICMP_t * const me)
 
 void XPROTO_ICMP__Destroy(XPROTO_ICMP_t * const me)
 {
-    if (me->pData != NULL)
-    {
-        free(me->pData);
-        me->pData = NULL;
-    }
+    //XNET_UTILS__Destroy((void *)&(me->pData));
+    XNET_UTILS__Destroy((void *)&(me->pPktChkSum));
+    XNET_UTILS__Destroy((void *)&(me->pPktSerial));
 }
 
 
 
 
 /* consider dynamic payload length */
-int XPROTO_ICMP__CreatePacket(XPROTO_ICMP_t * const me, char unsigned **buf,
-                                                         ssize_t datalen,
-                                                         short unsigned id,
-                                                         short unsigned seqNbr)
+int  XPROTO_ICMP__CreatePacket(XPROTO_ICMP_t * const me, 
+                               XPROTO_ICMP__eMsgType_t msgType,
+                               char unsigned *buf,
+                               ssize_t datalen,
+                               short unsigned id,
+                               short unsigned seqNbr)
 {
-    ssize_t payloadSize;
-    char unsigned *newBuf = NULL;
-    int retCode = 0;
-
-    if (!(buf)) 
-    {
-        retCode = (int)XPROTO_ICMP__enRetCode_CreatePktInvPtr;
-        goto labelOnExit;
-    }
-    payloadSize = (datalen) ? datalen : XPROTO_ICMP__PAYLOAD_SIZE;
+    int retCode = XPROTO_ICMP__enRetCode_CreatePacket_Failed;
+    XNET_UTILS__ASSERT_UPD_REDIRECT((buf != NULL), 
+                                    &retCode,
+                                    XPROTO_ICMP__enRetCode_CreatePacket_InvPtr,
+                                    labelExit);
 
     /* create the message to send */
-    me->type = XPROTO_ICMP__TYPE_ECHO;
+    me->type = msgType;
     me->code = XPROTO_ICMP__CODE;
     me->checksum = 0;
     me->identifier = id;
     me->seqnbr = seqNbr;
-    me->pData = malloc(payloadSize * sizeof(char unsigned));
-    if (!(me->pData))
-    {
-        retCode = (int)XPROTO_ICMP__enRetCode_CreatePktMallocPtrData;
-        goto labelOnExit;
-    }
+    me->pData = buf;
+    me->dataLen = datalen;
+    me->hdrLen = XPROTO_ICMP__HDR_MIN_LEN;
+    me->totalPacketLen = me->hdrLen + me->dataLen;
 
-    memset((void *)me->pData, 'a', payloadSize);
-    me->dataLen = payloadSize;
-    me->totalPacketLen = XPROTO_ICMP__HDR_MIN_LEN + me->dataLen;
+    /* fill up payload with data based on msg type*/
+    memset((void *)me->pData, 'a', datalen);
 
     /* Calculate and update the checksum */
-    me->checksum = me->CalcCheckSum(me);
-
-    /* Parse to buffer */
-    /* create a new buffer */
-    newBuf = malloc(me->totalPacketLen * sizeof(char unsigned));
-    if (newBuf)
-    {
-        /* copy header */
-        memcpy((void *)newBuf, (void *)me, XPROTO_ICMP__HDR_MIN_LEN);
-
-        /* copy data */
-        memcpy((void *)(newBuf + XPROTO_ICMP__HDR_MIN_LEN),
-               (void *)me->pData,
-               me->dataLen);
-
-        /* update pointer address */
-        *buf = newBuf;
-    }
+    me->CalcCheckSum(me);
+    XPROTO_ICMP__CreateSerialPacket(me, &(me->pPktSerial));
     retCode = EXIT_SUCCESS;
-labelOnExit:
-    /* clean up */
-    printf("\nretcode(%d); \n", retCode);
+
+labelExit:
+#ifdef XNET__DEBUG
+    printf("%s - retcode(%d)\n", XPROTO_ICMP_D_CREATE_PACKET, retCode);
+    printf("%s - icmp datalen(%ld)\n", XPROTO_ICMP_D_CREATE_PACKET, me->totalPacketLen);
+    XNET_UTILS__ShowPacketHex(me->pPktSerial, me->totalPacketLen);
+    XPROTO_ICMP__ShowDetails(me);
+#endif
     return (retCode);
 }
+
+
+
 
 
 short unsigned XPROTO_ICMP__CalcCheckSum(XPROTO_ICMP_t * const me)
 {
-    unsigned char *buf = NULL;
     short unsigned result = 0;
     
-    buf = malloc(me->totalPacketLen * sizeof(char unsigned));
-    if (buf)
+    if (me->pPktSerial)
     {
-        /* copy header */
-        memcpy((void *)buf, (void *)me, XPROTO_ICMP__HDR_MIN_LEN);
-
-        /* copy data */
-        memcpy((void *)(buf + XPROTO_ICMP__HDR_MIN_LEN),
-               (void *)me->pData,
-               me->dataLen);
+        /* do nothing */
+    }
+    else
+    {
+        me->pPktSerial = malloc(me->totalPacketLen * sizeof(char unsigned));
+    }
+    if (me->pPktSerial)
+    {
+        XPROTO_ICMP__CreateSerialPacket(me, &(me->pPktChkSum));
     
-        result = XNET_UTILS__CalcCheckSum16((void *)buf,
+        result = XNET_UTILS__CalcCheckSum16((void *)me->pPktChkSum,
                                             me->totalPacketLen,
                                             XNET_UTILS__enEndianType_Host);
-        /* Release resources */
-        free(buf);
-        buf = NULL;
+        me->checksum = result;
     }
     return (result);
-
-
-
-
-
 }
 
 
 
-#if 1
 
-int  XPROTO_ICMP__SendEchoRequest(XPROTO_ICMP_t * const me, 
-                                  struct addrinfo *pAddrInfo)
+int  XPROTO_ICMP__CreateSerialPacket(XPROTO_ICMP_t * const me, char unsigned **ppPkt)
 {
-    int retCode = XPROTO_ICMP__enRetCode_Failure;
-    char unsigned  *ptrPacket = NULL;
-    
-
-    /* create socket */
-    me->sockfd = XNET__CreateSocket(pAddrInfo);
-    if (!me->sockfd)
+    int retCode = XPROTO_ICMP__enRetCode_CreateSerialPacket_Failed;
+    XNET_UTILS__ASSERT_UPD_REDIRECT((me->pData != NULL), 
+                                    &retCode,
+                                    XPROTO_ICMP__enRetCode_CreateSerialPacket_InvPtr,
+                                    labelExit);
+    if (*ppPkt)
     {
-        retCode =  XPROTO_ICMP__enRetCode_SendReqEcho_CreateSockFailed;
-        goto labelEsc;
-    }
-    printf("\nSocket exist - (%d)\n", me->sockfd); 
-
-
-    /* Create icmp packet for transmission */
-    retCode = XPROTO_ICMP__CreatePacket(me, &ptrPacket, 0, 0x4321, 1);
-    if (retCode != EXIT_SUCCESS)
-    {
-        retCode =  XPROTO_ICMP__enRetCode_SendReqEcho_CreatePacketFailed;
-        goto labelEsc;
+        /* Data has been serialised */
+        free(*ppPkt);
+        *ppPkt = NULL;
     }
 
-    /* print packet content */
-    printf("\nretcode(%d); icmp datalen:%ld\n", retCode, me->totalPacketLen);
-    XNET_UTILS__ShowPacketHex(ptrPacket, me->totalPacketLen);
-    
-
-    /* send data to dest address */
-    me->datalenTx = sendto(me->sockfd, (void *)ptrPacket, 
-                              me->totalPacketLen,
-                              0,
-                              pAddrInfo->ai_addr,
-                              pAddrInfo->ai_addrlen);
-
-    if (me->datalenTx <= 0)
+    *ppPkt = malloc(me->totalPacketLen);
+    if (*ppPkt)
     {
-        perror("send error\n");
-    }
-    else
-    {
-        printf("success: sent (%ld)\n", me->datalenTx);
-        printf("pid: identifier (%x)\n", me->identifier);
-        printf("pid: checksum (%x)\n", me->checksum);
-        printf("sent message type: %d\n", me->type);
+        /* copy header */
+        memcpy((void *)(*ppPkt), (void *)me, me->hdrLen);
+
+        /* copy data */
+        memcpy((void *)(*(ppPkt) + me->hdrLen),
+               (void *)me->pData,
+               me->dataLen);
     }
 
-    
-    
-    
-    /* receive the response back */
-    me->datalenRx  = recvfrom(me->sockfd, me->recvBuf, 
-                                      XPROTO_ICMP__RX_BUFSZ, 
-                                      0, 
-                                      (struct sockaddr *)(&(me->dstAddr)),
-                                      &(me->dstAddrLen) );
-    if (me->datalenRx  <= 0)
-    {
-        printf("recv error\n");
-    }
-    else
-    {
-        printf("success: recv (%ld)\n", me->datalenRx );
-        XNET_UTILS__ShowPacketHex(me->recvBuf, me->datalenRx );
-    }
-
-labelEsc:
-    if (ptrPacket) free(ptrPacket);
-    close(me->sockfd);
+    retCode = EXIT_SUCCESS;
+labelExit:
     return (retCode);
 }
-#endif
+
+
+

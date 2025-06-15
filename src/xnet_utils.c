@@ -16,7 +16,9 @@ XNET_UTILS__CalcCheckSum16(void *b, int unsigned len,
     for (sum = 0; len > 1; len -= 2)
     {
         counter++;
+#ifdef XNET_UTILS__DEBUG
         printf("\ndata %d: 0x%04x", counter, *buf);
+#endif
         if (endian)
         {
             sum += ntohs(*(buf));
@@ -25,13 +27,17 @@ XNET_UTILS__CalcCheckSum16(void *b, int unsigned len,
         {
             sum += (*(buf));
         }
+#ifdef XNET_UTILS__DEBUG
         printf("\nsum %d: 0x%04x", counter, sum);
+#endif
         buf++;
 
         if (sum & (XNET_UTILS__CHKSUM_CARRY_BITMASK))
         {
             sum = (sum - XNET_UTILS__CHKSUM_CARRY_BITMASK + 1);
+#ifdef XNET_UTILS__DEBUG
             printf("\nsum %d: 0x%04x", counter, sum);
+#endif
         }
 
     }
@@ -40,23 +46,32 @@ XNET_UTILS__CalcCheckSum16(void *b, int unsigned len,
     {
         sum += *(unsigned char *)buf;
         counter++;
+#ifdef XNET_UTILS__DEBUG
         printf("\ndata %d: 0x%04x", counter, *(unsigned char *)buf);
         printf("\nsum %d: 0x%04x", counter, sum);
+#endif
 
     }
 
     if (sum & (XNET_UTILS__CHKSUM_CARRY_BITMASK))
     {
         sum = (sum - XNET_UTILS__CHKSUM_CARRY_BITMASK + 1);
+#ifdef XNET_UTILS__DEBUG
         printf("\ndata %d: 0x%04x", counter, sum);
+#endif
     }
 
+#ifdef XNET_UTILS__DEBUG
     printf("\nsum %d: 0x%04x", counter, sum);
+#endif
     result = ~sum;
+#ifdef XNET_UTILS__DEBUG
     printf("\ndata %d: 0x%04x", counter, result);
-
+#endif
     return result;
 }
+
+
 
 
 void XNET_UTILS__ShowAddrIpv4(int unsigned addr)
@@ -99,4 +114,18 @@ void XNET_UTILS__ShowPacketHex(char unsigned *buf, ssize_t bufSz)
         printf("%02x ", buf[x]);
     }
     printf("\n");
+}
+
+
+
+
+
+void XNET_UTILS__Destroy(void **p)
+{
+    if (!(p && (*p)))
+    {
+        return ;
+    }
+    free(*p);
+    *p = NULL;
 }

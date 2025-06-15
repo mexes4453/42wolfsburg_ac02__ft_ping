@@ -39,7 +39,7 @@ CC = g++
 GCC = gcc
 STD = c++17
 DEBUG = 
-VALGRIND = valgrind --leak-check=full --show-leak-kinds=all
+VALGRIND = valgrind -s --leak-check=full --show-leak-kinds=all
 USR_LIB_PATH_XPNG = ./xlib/xpng
 USR_LIB_PATH_XDIR = ./xlib/xdir
 USR_LIB_XPNG=libxpng.a
@@ -47,7 +47,9 @@ USR_LIB_XDIR=libxdir.a
 
 # FLAGS
 CFLAGS = -Werror -Wall -Wextra \
-         -D__USE_XOPEN2K
+         -D__USE_XOPEN2K \
+		 -DXNET__DEBUG \
+		 #-DXNET_UTILS__DEBUG \
          #-g -pthread -lrt -lSDL2 -ldl -lGL -lz #-std=$(STD) 
 
 

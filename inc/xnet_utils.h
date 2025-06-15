@@ -5,9 +5,22 @@
 # include <stdio.h>
 # include <arpa/inet.h>
 # include <assert.h>
+# include <stdlib.h>
 
 # define XNET_UTILS__CHKSUM_CARRY_BITMASK (0x10000)
 # define XNET_UTILS__LITTLE_ENDIAN
+
+# define XNET_UTILS__ASSERT_UPD_REDIRECT(cond,pRetCode,retCode,label)\
+{\
+    if (!cond) \
+    {\
+        (*((int *)pRetCode)) = retCode; \
+        goto label; \
+    } \
+}
+
+
+
 
 typedef enum XNET_UTILS__endianType_e
 {
@@ -19,7 +32,7 @@ unsigned short XNET_UTILS__CalcCheckSum16(void *b,
                                           int unsigned len, 
                                           XNET_UTILS__endianType_t endian);
 void           XNET_UTILS__ShowAddrIpv4(int unsigned addr);
-void           XNET_UTILS__Destroy(void *p);
+void           XNET_UTILS__Destroy(void **p);
 void           XNET_UTILS__ShowPacketHex(char unsigned *buf, ssize_t bufSz);
 
 #endif /* XNET_UTILS_H */

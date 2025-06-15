@@ -1,27 +1,16 @@
 #include "../inc/xapp.h"
 
+
 int main(int argc, char *argv[])
 {
-    int                idxArg;
-    int                retCode;
-    XAPP_t             appVar;
-    XPROTO_ICMP_t      icmpHdr;
+    int     idxArg;
+    int     retCode;
+    XAPP_t *pAppVar;
 
-    /* Initialise the variables */
-    idxArg = 1;
-    retCode = 0;
-    XAPP__Ctor(&appVar, XAPP__ADDR_DST);
-    XPROTO_ICMP__Ctor(&icmpHdr);
+    /* Establish handler for signal (SIGINT) */
+    signal(SIGINT, XAPP__SigIntHandler);
 
-    retCode = XPROTO_ICMP__SendEchoRequest(&icmpHdr, appVar.pAddrInfo);
-    printf("\nretcode(%d);\n", retCode);
-
-
-
-
-
-
-
+    /* parse argument */
 #if 1
     int opt = 1;
     int optind =1, optopt=1;
@@ -37,8 +26,53 @@ int main(int argc, char *argv[])
     }
 #endif
 
+    /* Initialise the variables */
+    idxArg = 1;
+    pAppVar = XAPP__GetInstance();
+    retCode = XAPP__Ctor(pAppVar, XAPP__ADDR_DST);
 
-    freeaddrinfo(appVar.pAddrInfo);
-    icmpHdr.Destroy(&icmpHdr);
+    retCode = XAPP__CreateIcmpPacket(pAppVar, XPROTO_ICMP__enMsgType_Echo);
+    XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == EXIT_SUCCESS), 
+                                    &retCode,
+                                    retCode, /* retransmit the same error */
+                                    labelExit);
+    while (XAPP__TRUE)
+    {
+        /*>
+         * Blocks indefinitely until something happens in any of the 
+         * file descriptors */
+        pAppVar->ready = poll(pAppVar->fds, pAppVar->nfds, 1000);
+                             
+        if (pAppVar->ready)
+        {
+            if (pAppVar->fds[0].revents & POLLIN)
+            {
+                XAPP__RxPacket(pAppVar);
+                pAppVar->pktCntRx++;
+            }
+        }
+        else
+        {
+            printf("\nNothing happened !\n");
+        }
+        
+
+        /* send tx packet  */
+        //if (pAppVar->pktCntTx <= XAPP__DEF_REQNBR)
+        if (pAppVar->pktCntTx >= 2)
+        {
+            break;
+        }
+        else
+        {
+            XAPP__TxPacket(pAppVar);
+            pAppVar->pktCntTx++;
+        }
+    }
+
+
+labelExit:
+    /* clean up */
+    XAPP__Destroy(pAppVar);
     return (retCode);
 }

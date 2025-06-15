@@ -16,6 +16,8 @@
 #include "../inc/xnet_utils.h"
 
 #define XNET__LITTLE_ENDIAN
+//#define XNET__DEBUG
+
 #define XNET__MSG_FMT_ADDR_INFO "\n=== ADDR INFO === \
                                  \ncannon name: %s \
                                  \nip_family: %d \

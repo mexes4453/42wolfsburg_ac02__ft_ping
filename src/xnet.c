@@ -60,7 +60,9 @@ int  XNET__CreateSocket(struct addrinfo *pAi)
         }
         else
         {
-            printf("[XNET::CreateSocket] - success %d",retCode);
+#ifdef XNET__DEBUG
+            printf("[XNET::CreateSocket] - success : sockfd( %d )",retCode);
+#endif
             break ;
         }
         /* Next node to addr info in linked list */
