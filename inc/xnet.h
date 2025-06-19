@@ -2,7 +2,7 @@
 # define XNET_H
 
 /* https://beej.us/guide/bgnet/html/ */
-
+# include <poll.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -11,8 +11,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include "../inc/xproto_ip.h"
-#include "../inc/xproto_icmp.h"
 #include "../inc/xnet_utils.h"
 
 #define XNET__LITTLE_ENDIAN

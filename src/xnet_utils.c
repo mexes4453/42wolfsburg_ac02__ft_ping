@@ -122,10 +122,24 @@ void XNET_UTILS__ShowPacketHex(char unsigned *buf, ssize_t bufSz)
 
 void XNET_UTILS__Destroy(void **p)
 {
-    if (!(p && (*p)))
+    if (!(p != NULL && ((*p) != NULL)))
     {
         return ;
     }
     free(*p);
     *p = NULL;
+}
+
+
+
+
+
+bool  XNET_UTILS__IsNullPtr(void **p)
+{
+    bool retCode = false;
+    if (p != NULL)
+    {
+        retCode = (*p == NULL) ? true : false;
+    }
+    return (retCode);
 }

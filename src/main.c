@@ -31,47 +31,52 @@ int main(int argc, char *argv[])
     pAppVar = XAPP__GetInstance();
     retCode = XAPP__Ctor(pAppVar, XAPP__ADDR_DST);
 
-    retCode = XAPP__CreateIcmpPacket(pAppVar, XPROTO_ICMP__enMsgType_Echo);
-    XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == EXIT_SUCCESS), 
-                                    &retCode,
-                                    retCode, /* retransmit the same error */
-                                    labelExit);
+  
     while (XAPP__TRUE)
     {
         /*>
          * Blocks indefinitely until something happens in any of the 
          * file descriptors */
-        pAppVar->ready = poll(pAppVar->fds, pAppVar->nfds, 1000);
+        //pAppVar->ready = poll(pAppVar->fds, pAppVar->nfds, XAPP__POLL_BLOCK_DURATION);
+        pAppVar->ready = ppoll(pAppVar->fds, pAppVar->nfds, &(pAppVar->stats.tPoll), NULL);
                              
         if (pAppVar->ready)
         {
             if (pAppVar->fds[0].revents & POLLIN)
             {
-                XAPP__RxPacket(pAppVar);
-                pAppVar->pktCntRx++;
+                XAPP__GetTimeOfEnd(pAppVar);
+                if (XAPP__RxPacket(pAppVar) == EXIT_SUCCESS)
+                {
+                    retCode = XAPP__ValidateRxPkt(pAppVar);
+                    if (retCode == EXIT_SUCCESS)
+                    {
+                        pAppVar->pktCntRx++;
+                        XAPP__StatsComputeRtt(pAppVar);
+                    }
+                }
             }
         }
         else
         {
-            printf("\nNothing happened !\n");
+#ifdef XNET__DEBUG
+            printf("\nNothing to read !\n");
+#endif
         }
-        
-
+        XAPP__Wait(pAppVar);
         /* send tx packet  */
         //if (pAppVar->pktCntTx <= XAPP__DEF_REQNBR)
-        if (pAppVar->pktCntTx >= 2)
+        if (pAppVar->pktCntTx >= 5)
         {
             break;
         }
         else
         {
             XAPP__TxPacket(pAppVar);
-            pAppVar->pktCntTx++;
         }
     }
 
 
-labelExit:
+//labelExit:
     /* clean up */
     XAPP__Destroy(pAppVar);
     return (retCode);

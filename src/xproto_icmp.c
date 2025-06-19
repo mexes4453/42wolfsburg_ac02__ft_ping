@@ -1,15 +1,15 @@
 #include "../inc/xproto_icmp.h"
 
 
-
+#if 0
 void XPROTO_ICMP__Ctor(XPROTO_ICMP_t * const me)
 {
     memset((void *)me, 0, sizeof(XPROTO_ICMP_t));
-    me->ParseFrom = XPROTO_ICMP__ParseFrom;
-    me->ShowDetails = XPROTO_ICMP__ShowDetails;
-    me->Destroy = XPROTO_ICMP__Destroy;
-    me->CreatePacket = XPROTO_ICMP__CreatePacket;
-    me->CalcCheckSum = XPROTO_ICMP__CalcCheckSum;
+    //me->ParseFrom = XPROTO_ICMP__ParseFrom;
+    //me->ShowDetails = XPROTO_ICMP__ShowDetails;
+    //me->Destroy = XPROTO_ICMP__Destroy;
+    //me->CreatePacket = XPROTO_ICMP__CreatePacket;
+    //me->CalcCheckSum = XPROTO_ICMP__CalcCheckSum;
 }
 
 
@@ -30,7 +30,7 @@ void XPROTO_ICMP__ParseFrom( XPROTO_ICMP_t *me, char unsigned *buf,
      * Parse the data 
      * The remaining data in buffer is for data */
     lenData = bufSz - XPROTO_ICMP__HDR_MIN_LEN;
-    me->pData = malloc(lenData * sizeof(char unsigned));
+    me->pData = (char unsigned *)malloc(lenData * sizeof(char unsigned));
     if (!(me->pData))
     {
         return ;
@@ -104,8 +104,8 @@ int  XPROTO_ICMP__CreatePacket(XPROTO_ICMP_t * const me,
     /* Calculate and update the checksum */
     me->CalcCheckSum(me);
     XPROTO_ICMP__CreateSerialPacket(me, &(me->pPktSerial));
-    retCode = EXIT_SUCCESS;
 
+    retCode = EXIT_SUCCESS;
 labelExit:
 #ifdef XNET__DEBUG
     printf("%s - retcode(%d)\n", XPROTO_ICMP_D_CREATE_PACKET, retCode);
@@ -124,18 +124,11 @@ short unsigned XPROTO_ICMP__CalcCheckSum(XPROTO_ICMP_t * const me)
 {
     short unsigned result = 0;
     
-    if (me->pPktSerial)
+    /* remove existing checksum value */
+    me->checksum = 0; 
+
+    if ( XPROTO_ICMP__CreateSerialPacket(me, &(me->pPktChkSum)) == EXIT_SUCCESS)
     {
-        /* do nothing */
-    }
-    else
-    {
-        me->pPktSerial = malloc(me->totalPacketLen * sizeof(char unsigned));
-    }
-    if (me->pPktSerial)
-    {
-        XPROTO_ICMP__CreateSerialPacket(me, &(me->pPktChkSum));
-    
         result = XNET_UTILS__CalcCheckSum16((void *)me->pPktChkSum,
                                             me->totalPacketLen,
                                             XNET_UTILS__enEndianType_Host);
@@ -161,7 +154,7 @@ int  XPROTO_ICMP__CreateSerialPacket(XPROTO_ICMP_t * const me, char unsigned **p
         *ppPkt = NULL;
     }
 
-    *ppPkt = malloc(me->totalPacketLen);
+    *ppPkt = (char unsigned *)malloc(me->totalPacketLen);
     if (*ppPkt)
     {
         /* copy header */
@@ -180,3 +173,4 @@ labelExit:
 
 
 
+#endif

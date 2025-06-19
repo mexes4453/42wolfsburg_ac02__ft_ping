@@ -14,14 +14,19 @@ void XPROTO_IP__Ctor(XPROTO_IP_t * const me)
 
 
 
-void XPROTO_IP__ParseFrom(XPROTO_IP_t * const me, char unsigned *buf,
+int XPROTO_IP__ParseFrom(XPROTO_IP_t * const me, char unsigned *buf,
                                                 ssize_t bufSz)
 {
     int lenOption;
     int lenData;
     int lenHdr;
+    int retCode = EXIT_FAILURE;
 
-    if (!(buf && me && (bufSz >= XPROTO_IP__HDR_MIN_LEN))) return;
+    XNET_UTILS__ASSERT_UPD_REDIRECT( 
+        (buf && me && (bufSz >= XPROTO_IP__HDR_MIN_LEN)),
+        &retCode, 
+        XPROTO_IP__enRetCode_ParseFrom_InvFrameLen,
+        labelExit);
 
     /*>
      * The first 20 bytes are static. Therefore they can be copied
@@ -35,11 +40,11 @@ void XPROTO_IP__ParseFrom(XPROTO_IP_t * const me, char unsigned *buf,
     lenOption =  lenHdr - XPROTO_IP__HDR_MIN_LEN;
     if (lenOption)
     {
-        me->pOption = malloc(lenOption * sizeof(char unsigned));
-        if (!(me->pOption))
-        {
-            return ;
-        }
+        me->pOption = (char unsigned *)malloc(lenOption * sizeof(char unsigned));
+        XNET_UTILS__ASSERT_UPD_REDIRECT( me->pOption,
+            &retCode, 
+            XPROTO_IP__enRetCode_ParseFrom_OptionMallocFailed,
+            labelExit);
         /* copying continues from the 20th byte from the buf */
         memcpy((void *)(me->pOption), 
                &(buf[XPROTO_IP__HDR_MIN_LEN]),
@@ -50,13 +55,16 @@ void XPROTO_IP__ParseFrom(XPROTO_IP_t * const me, char unsigned *buf,
      * Parse the data 
      * The remaining data in buffer is for data */
     lenData = bufSz - lenHdr;
-    me->pData = malloc(lenData * sizeof(char unsigned));
-    if (!(me->pData))
-    {
-        return ;
-    }
+    me->pData = (char unsigned *)malloc(lenData * sizeof(char unsigned));
+    XNET_UTILS__ASSERT_UPD_REDIRECT( me->pData,
+            &retCode, 
+            XPROTO_IP__enRetCode_ParseFrom_DataMallocFailed,
+            labelExit);
     memcpy((void *)(me->pData), &(buf[ lenHdr ]), lenData);
     me->dataLen = lenData;
+    retCode = EXIT_SUCCESS;
+labelExit:
+    return(retCode);
 }
 
 
@@ -109,7 +117,6 @@ short unsigned XPROTO_IP__CalcCheckSum(XPROTO_IP_t * const me)
 {
     ssize_t     bufSz = 0;
     ssize_t     lenOption = 0;         
-    char unsigned *buf = NULL;    
     short unsigned res = 0;
     
     /*>
@@ -130,20 +137,22 @@ short unsigned XPROTO_IP__CalcCheckSum(XPROTO_IP_t * const me)
     lenOption = bufSz - XPROTO_IP__HDR_MIN_LEN;
 
     /* Create the buffer */
-    buf = malloc(bufSz * sizeof(char unsigned));
-    if (buf) 
+    me->pPktChkSum = (char unsigned *)malloc(bufSz * sizeof(char unsigned));
+    if (me->pPktChkSum) 
     {
         /* Copy the static header into the buffer */
-        memcpy((void *)buf, (void *)me, XPROTO_IP__HDR_MIN_LEN);
+        memcpy((void *)me->pPktChkSum, (void *)me, XPROTO_IP__HDR_MIN_LEN);
+#ifdef XPROTO_IP__DEBUG
         for (int x=0; x<bufSz; x++)
         {
-            printf("\nIP_raw_data: (%d) -> 0x%02x", x, buf[x]);
+            printf("\nIP_raw_data: (%d) -> 0x%02x", x, me->pPktChkSum[x]);
         }
+#endif
 
         /* Copy the options if available */
         if (lenOption && me->pOption)
         {
-            memcpy((void *)(buf + XPROTO_IP__HDR_MIN_LEN),
+            memcpy((void *)(me->pPktChkSum + XPROTO_IP__HDR_MIN_LEN),
                    (void *)(me->pOption),
                    lenOption);
         }
@@ -153,9 +162,11 @@ short unsigned XPROTO_IP__CalcCheckSum(XPROTO_IP_t * const me)
          * has been created */
         me->hdrChkSum = res;
 
-        res = XNET_UTILS__CalcCheckSum16((void *)buf, bufSz, XNET_UTILS__enEndianType_Network);
+        res = XNET_UTILS__CalcCheckSum16((void *)me->pPktChkSum, bufSz, XNET_UTILS__enEndianType_Network);
+#ifdef XPROTO_IP__DEBUG
         printf("\nThe ip checksum: 0x%04x\n", res);
-        free(buf); /*  Release resource */
+#endif
+        free(me->pPktChkSum); /*  Release resource */
     }
     else
     {
@@ -177,6 +188,12 @@ XPROTO_IP__retCode_t XPROTO_IP__IsCheckSumValid(XPROTO_IP_t * const me)
     {
         retCode = XPROTO_IP__enRetCode_Success;
     }
+#ifdef XPROTO_IP__DEBUG
     printf("\ncalc: %04x => default: 0x%04x", checkSumCalculated, checkSumReceived);
+#endif
     return retCode;
 }
+
+
+
+

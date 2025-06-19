@@ -10,14 +10,6 @@
 #define XPROTO_ICMP__CODE             (0)
 #define XPROTO_ICMP__HDR_MIN_LEN      (8)
 #define XPROTO_ICMP__PAYLOAD_SIZE     (56)
-#define XPROTO_ICMP__MSG_FMT_HDR_ECHO_REPLY "\ntype: %x \
-                                           \ncode: 0x%x( %d )\
-                                           \nchecksum: 0x%04x \
-                                           \nid: 0x%x( %d ) \
-                                           \nseqnbr: 0x%x( %d ) \
-                                           \ndataLen: %ld \
-                                           \n"
-
 #ifdef XNET__DEBUG
 # define XPROTO_ICMP_D_CREATE_PACKET "\n[XPROTO_ICMP::CreatePacket]"
 #endif
@@ -34,20 +26,35 @@ typedef enum XPROTO_ICMP__retCode_e
 
 
 
-typedef enum XPROTO_ICMP__msgType_e
+typedef enum XPROTO_ICMP__Type_e
 {
-    XPROTO_ICMP__enMsgType_EchoReply = 0,
-    XPROTO_ICMP__enMsgType_Echo = 8,
-    XPROTO_ICMP__enMsgType_Timestamp = 13,
-    XPROTO_ICMP__enMsgType_TimestampReply,
-    XPROTO_ICMP__enMsgType_InfoRequest,
-    XPROTO_ICMP__enMsgType_InfoReply,
-} XPROTO_ICMP__eMsgType_t;
+    XPROTO_ICMP__enType_EchoReply = 0,
+    XPROTO_ICMP__enType_Echo = 8,
+    XPROTO_ICMP__enType_Timestamp = 13,
+    XPROTO_ICMP__enType_TimestampReply,
+    XPROTO_ICMP__enType_InfoRequest,
+    XPROTO_ICMP__enType_InfoReply,
+} XPROTO_ICMP__eType_t;
 
+
+
+
+typedef enum XPROTO_ICMP__Code_e
+{
+    XPROTO_ICMP__enCode_EchoReply = 0,
+    XPROTO_ICMP__enCode_Echo = 0,
+    XPROTO_ICMP__enCode_Timestamp = 13,
+    XPROTO_ICMP__enCode_TimestampReply,
+    XPROTO_ICMP__enCode_InfoRequest,
+    XPROTO_ICMP__enCode_InfoReply,
+} XPROTO_ICMP__eCode_t;
 
 
 
 typedef struct XPROTO_ICMP_s XPROTO_ICMP_t;
+
+
+
 /**
  * @brief ICMP struct RFC 792
  * 
@@ -58,32 +65,9 @@ struct XPROTO_ICMP_s
     char unsigned      type;
     char unsigned      code;
     short unsigned     checksum;
-    short unsigned     identifier;
-    short unsigned     seqnbr;
-    /* Dynamic section */
-    char unsigned     *pData;       /* Payload      */
-    ssize_t            dataLen;     /* Payload size */
-    ssize_t            hdrLen;      /* header size */
-    ssize_t            totalPacketLen; /* header + payload size */
-    char unsigned     *pPktSerial;
-    char unsigned     *pPktChkSum;
-
-
-
-
-    /* Methods */
-    void (*ParseFrom)(XPROTO_ICMP_t * const, char unsigned *, ssize_t);
-    void (*ShowDetails)(XPROTO_ICMP_t * const);
-    void (*Destroy)(XPROTO_ICMP_t * const);
-    int  (*CreatePacket)(XPROTO_ICMP_t * const, XPROTO_ICMP__eMsgType_t ,
-                                                char unsigned *,
-                                                ssize_t ,
-                                                short unsigned ,
-                                                short unsigned );
-    short unsigned (*CalcCheckSum)(XPROTO_ICMP_t * const);
-
 };
 
+#if 0
 void XPROTO_ICMP__Ctor(XPROTO_ICMP_t * const me);
 void XPROTO_ICMP__ParseFrom( XPROTO_ICMP_t *me, char unsigned *buf,
                                                 ssize_t bufSz );
@@ -97,5 +81,6 @@ int  XPROTO_ICMP__CreatePacket(XPROTO_ICMP_t * const me,
                                short unsigned seqNbr);
 short unsigned XPROTO_ICMP__CalcCheckSum(XPROTO_ICMP_t * const me);
 int  XPROTO_ICMP__CreateSerialPacket(XPROTO_ICMP_t * const me, char unsigned **ppPkt);
+#endif
 
 #endif /* XPROTO_ICMP_H*/

@@ -6,6 +6,7 @@
 # include <arpa/inet.h>
 # include <assert.h>
 # include <stdlib.h>
+# include <stdbool.h>
 
 # define XNET_UTILS__CHKSUM_CARRY_BITMASK (0x10000)
 # define XNET_UTILS__LITTLE_ENDIAN
@@ -34,5 +35,6 @@ unsigned short XNET_UTILS__CalcCheckSum16(void *b,
 void           XNET_UTILS__ShowAddrIpv4(int unsigned addr);
 void           XNET_UTILS__Destroy(void **p);
 void           XNET_UTILS__ShowPacketHex(char unsigned *buf, ssize_t bufSz);
+bool  XNET_UTILS__IsNullPtr(void **p);
 
 #endif /* XNET_UTILS_H */

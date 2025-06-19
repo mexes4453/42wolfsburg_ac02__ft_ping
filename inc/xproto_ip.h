@@ -27,6 +27,11 @@
 typedef enum XPROTO_IP__retCode_s
 {
     XPROTO_IP__enRetCode_InvalidCheckSum = -255,
+    XPROTO_IP__enRetCode_ParseFrom_InvFrameLen, 
+    XPROTO_IP__enRetCode_ParseFrom_OptionMallocFailed,
+    XPROTO_IP__enRetCode_ParseFrom_DataMallocFailed,
+    XAPP__enRetCode_ValidateRxPkt_ParseFailed,
+    XAPP__enRetCode_ValidateRxPkt_PtrIpHdrMallocFailed,
     XPROTO_IP__enRetCode_Success = 0,
 }   XPROTO_IP__retCode_t;
 
@@ -84,9 +89,10 @@ struct XPROTO_IP_s
     char unsigned *pOption;      /* Variable: Option            */
     char unsigned *pData;        /* Variable: Data              */
     ssize_t        dataLen;      /* Variable: Data              */
+    char unsigned *pPktChkSum;        /* Variable: Data              */
     /* Methods */
     void                 (*ShowDetails)(XPROTO_IP_t * const);
-    void                 (*ParseFrom)(XPROTO_IP_t * const, char unsigned *,
+    int                 (*ParseFrom)(XPROTO_IP_t * const, char unsigned *,
                                                            ssize_t);
     void                 (*Destroy)(XPROTO_IP_t * const);
     short unsigned       (*CalcCheckSum)(XPROTO_IP_t * const);
@@ -97,7 +103,7 @@ struct XPROTO_IP_s
 
 void                 XPROTO_IP__Ctor(XPROTO_IP_t * const me);
 void                 XPROTO_IP__ShowDetails(XPROTO_IP_t * const me);
-void                 XPROTO_IP__ParseFrom(XPROTO_IP_t * const me, char unsigned *buf,
+int                 XPROTO_IP__ParseFrom(XPROTO_IP_t * const me, char unsigned *buf,
                                                 ssize_t bufSz);
 void                 XPROTO_IP__Destroy(XPROTO_IP_t * const me);
 short unsigned       XPROTO_IP__CalcCheckSum(XPROTO_IP_t * const me);

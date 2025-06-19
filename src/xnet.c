@@ -6,7 +6,7 @@ void XNET__InitAddrInfo(struct addrinfo *pAi, int family,
                                               int protocol,
                                               int flags)
 {
-    memset(pAi, 0, sizeof(struct addrinfo));
+    memset((void *)pAi, 0, sizeof(struct addrinfo));
     pAi->ai_canonname = NULL;
     pAi->ai_addr = NULL;
     pAi->ai_next = NULL;
