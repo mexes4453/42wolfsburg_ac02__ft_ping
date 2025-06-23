@@ -17,7 +17,7 @@
                               \nflag_fragOffset: %x \
                               \nflag: %x \
                               \nfragOffset: %x \
-                              \ntol: %x( %d ) \
+                              \nttl: %x( %d ) \
                               \nprotocol: %x \
                               \nheader checksum: %x \
                               \naddrSrc: %x \
@@ -80,7 +80,7 @@ struct XPROTO_IP_s
         };
     };
     
-    char unsigned  tol;          /* 1 byte: Time to live        */
+    char unsigned  ttl;          /* 1 byte: Time to live        */
     char unsigned  protocol;     /* 1 byte: Protocol            */
     short unsigned hdrChkSum;    /* 2 byte: Header checksum     */
     int unsigned   addrSrc;      /* 4 byte: Address source      */      
@@ -92,7 +92,7 @@ struct XPROTO_IP_s
     char unsigned *pPktChkSum;        /* Variable: Data              */
     /* Methods */
     void                 (*ShowDetails)(XPROTO_IP_t * const);
-    int                 (*ParseFrom)(XPROTO_IP_t * const, char unsigned *,
+    int                  (*ParseFrom)(XPROTO_IP_t * const, char unsigned *,
                                                            ssize_t);
     void                 (*Destroy)(XPROTO_IP_t * const);
     short unsigned       (*CalcCheckSum)(XPROTO_IP_t * const);
@@ -103,8 +103,9 @@ struct XPROTO_IP_s
 
 void                 XPROTO_IP__Ctor(XPROTO_IP_t * const me);
 void                 XPROTO_IP__ShowDetails(XPROTO_IP_t * const me);
-int                 XPROTO_IP__ParseFrom(XPROTO_IP_t * const me, char unsigned *buf,
-                                                ssize_t bufSz);
+int                  XPROTO_IP__ParseFrom(XPROTO_IP_t * const me, 
+                                          char unsigned      *buf,
+                                          ssize_t             bufSz);
 void                 XPROTO_IP__Destroy(XPROTO_IP_t * const me);
 short unsigned       XPROTO_IP__CalcCheckSum(XPROTO_IP_t * const me);
 XPROTO_IP__retCode_t XPROTO_IP__IsCheckSumValid(XPROTO_IP_t * const me);

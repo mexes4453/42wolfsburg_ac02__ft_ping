@@ -1,12 +1,11 @@
 # include "../inc/xtimer.h"
 
 
-
 XTIMER__timespec_t *XTIMER__Max(XTIMER__timespec_t *pTs1, XTIMER__timespec_t *pTs2)
 {
     XTIMER__timespec_t *pTs;
-    long int diff = pTs1->tv_sec - pTs2->tv_sec;
-    if (diff)
+    long int diff = (int long)pTs1->tv_sec - (int long)pTs2->tv_sec;
+    if (diff > 0)
     {
         pTs = pTs1;
     }
@@ -17,10 +16,13 @@ XTIMER__timespec_t *XTIMER__Max(XTIMER__timespec_t *pTs1, XTIMER__timespec_t *pT
     else /* the same value : diff=0 */
     {
         /* check nsec */
-        diff = pTs1->tv_nsec - pTs2->tv_nsec;
-        if (diff)
+        diff = (int long) pTs1->tv_nsec - (int long)pTs2->tv_nsec;
+        if (diff > 0)
         {
             pTs = pTs1;
+#ifdef XTIMER__DEBUG
+            printf("\n max check %ld\n", diff);
+#endif
         }
         else if (diff < 0)
         {
@@ -28,18 +30,25 @@ XTIMER__timespec_t *XTIMER__Max(XTIMER__timespec_t *pTs1, XTIMER__timespec_t *pT
         }
         else
         {
-            pTs = pTs1;
+            pTs = pTs2;
         }
     }
+#ifdef XTIMER__DEBUG
+    XTIMER__ShowTimeSpec(pTs1);
+    XTIMER__ShowTimeSpec(pTs2);
+    XTIMER__ShowTimeSpec(pTs);
+#endif
     return (pTs);
 }
+
+
 
 
 XTIMER__timespec_t *XTIMER__Min(XTIMER__timespec_t *pTs1, XTIMER__timespec_t *pTs2)
 {
     XTIMER__timespec_t *pTs;
-    long int diff = pTs1->tv_sec - pTs2->tv_sec;
-    if (diff)
+    long int diff = (int long)(pTs1->tv_sec) - (int long)(pTs2->tv_sec);
+    if (diff > 0)
     {
         pTs = pTs2;
     }
@@ -50,8 +59,8 @@ XTIMER__timespec_t *XTIMER__Min(XTIMER__timespec_t *pTs1, XTIMER__timespec_t *pT
     else /* the same value : diff=0 */
     {
         /* check nsec */
-        diff = pTs1->tv_nsec - pTs2->tv_nsec;
-        if (diff)
+        diff = (int long)(pTs1->tv_nsec) - (int long)(pTs2->tv_nsec);
+        if (diff > 0)
         {
             pTs = pTs2;
         }
@@ -64,17 +73,23 @@ XTIMER__timespec_t *XTIMER__Min(XTIMER__timespec_t *pTs1, XTIMER__timespec_t *pT
             pTs = pTs1;
         }
     }
+#ifdef XTIMER__DEBUG
+    XTIMER__ShowTimeSpec(pTs1);
+    XTIMER__ShowTimeSpec(pTs2);
+    XTIMER__ShowTimeSpec(pTs);
+#endif
     return (pTs);
 }
 
 
 
+
 void XTIMER__Diff(XTIMER__timespec_t *pTs1, XTIMER__timespec_t *pTs2,
-                                                XTIMER__timespec_t *pRes)
+                                            XTIMER__timespec_t *pRes)
 {
     XTIMER__timespec_t *pTsMax = XTIMER__Max(pTs1, pTs2);
     XTIMER__timespec_t *pTsMin = XTIMER__Min(pTs1, pTs2);
-    long int diff = pTsMax->tv_nsec - pTsMin->tv_nsec;
+    long int diff = (int long)pTsMax->tv_nsec - (int long)pTsMin->tv_nsec;
 
     if (diff < 0)
     {
@@ -92,7 +107,7 @@ void XTIMER__Diff(XTIMER__timespec_t *pTs1, XTIMER__timespec_t *pTs2,
 
 
 void XTIMER__Sum(XTIMER__timespec_t *pTs1, XTIMER__timespec_t *pTs2,
-                                                XTIMER__timespec_t *pRes)
+                                           XTIMER__timespec_t *pRes)
 {
     long int sum = pTs1->tv_nsec - pTs2->tv_nsec;
     pRes->tv_nsec = sum % XTIMER__SECOND_TO_NS;
@@ -104,5 +119,17 @@ void XTIMER__Sum(XTIMER__timespec_t *pTs1, XTIMER__timespec_t *pTs2,
 
 void  XTIMER__ShowTimeSpec(XTIMER__timespec_t *pTs)
 {
-    printf("Timespec: S( %ld ), NS ( %ld )\n", pTs->tv_sec, pTs->tv_nsec);
+    printf("Timespec: S( %ld ), NS ( %ld ) - (%p)\n", pTs->tv_sec, pTs->tv_nsec, pTs);
+}
+
+
+
+
+double  XTIMER__ConvertTsToSec(XTIMER__timespec_t *pTs)
+{
+    double sec = 0.0;
+    
+    sec = pTs->tv_nsec/1000000000.0;
+    sec += pTs->tv_sec;
+    return (sec);
 }

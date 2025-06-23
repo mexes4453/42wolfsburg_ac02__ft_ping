@@ -4,24 +4,27 @@
 # define _GNU_SOURCE /* allows the use of ppoll */
 # include <unistd.h>
 # include <signal.h>
+# include <math.h>
 # include "../inc/xnet.h"
 # include "../inc/xtimer.h"
-#include "../inc/xproto_ip.h"
-#include "../inc/xproto_icmp.h"
-#include "../inc/icmp_echo.h"
+# include "../inc/xproto_ip.h"
+# include "../inc/xproto_icmp.h"
+# include "../inc/icmp_echo.h"
 
 #define XAPP__ADDR_DST  "142.250.181.238"   ///< Google.com ip addr
 #define XAPP__DEF_REQNBR          (4)
 #define XAPP__SOCKFD_MAX_NBR      (1)
 #define XAPP__RX_BUFSZ            (1024)
+#define XAPP__BUFSZ_TXTSTR        (512)
 #define XAPP__DEF_ICMP_DATA_SIZE  (56)
 #define XAPP__TRUE                (1)
-#define XAPP__POLL_BLOCK_DURATION (1000)
-#define XAPP__INFO_PING_START   "PING %s (%s): %d data bytes\n"
-#define XAPP__MSG_FMT_RTT       "%ld bytes from %s: icmp_seq=%d ttl=%d time=%.3f ms\n"
-#define XAPP__MSG_FMT_STATS     "--- %s ping statistics ---\
-                                 \n %ld packets transmitted, %ld packets received, %ld packet loss \
-                                 \n round-trip min/avg/max/stddev = %3.3f/%3.3f/%3.3f/%3.3f ms \n"
+#define XAPP__POLL_BLOCK_DURATION (1)    ///< 1 second
+#define XAPP__INFO_PING_START     "PING %s (%s): %d data bytes\n"
+#define XAPP__MSG_FMT_RTT1         "%ld bytes from %s: "
+#define XAPP__MSG_FMT_RTT2         "icmp_seq=%d ttl=%d time=%.3f ms\n"
+#define XAPP__MSG_FMT_STATS_TITLE "--- %s ping statistics ---"
+#define XAPP__MSG_FMT_STATS       "\n %ld packets transmitted, %ld packets received, %ld%c packet loss \
+                                   \n round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms \n"
 
 #ifdef XAPP__DEBUG
 # define XAPP_D_VALIDATE_RX_PKT "\n[ XAPP::VALIDATE_RX_PKT ]"
@@ -84,6 +87,11 @@ typedef struct XAPP_s
     XPROTO_IP_t        *pIpHdr;
     int                 sockfd;
     short unsigned      pid;
+    timer_t             timerId;
+    struct sigevent     timerEvt;
+    struct itimerspec   timerVal;
+    struct itimerspec   timerValRem;
+    struct sigaction    sa;
     nfds_t              nfds;
     struct pollfd       fds[XAPP__SOCKFD_MAX_NBR];
     int                 ready;
@@ -94,6 +102,7 @@ typedef struct XAPP_s
     struct sockaddr_in  dstAddr;
     socklen_t           dstAddrLen;
     char unsigned       recvBuf[XAPP__RX_BUFSZ];
+    char                strText[XAPP__BUFSZ_TXTSTR];
     XAPP__stats_t       stats;
 }   XAPP_t;
 
@@ -114,8 +123,11 @@ void    XAPP__StatsComputeRtt(XAPP_t * const me);
 void    XAPP__StatsUpdate(XAPP_t * const me);
 void    XAPP__StatsShowRtt(XAPP_t * const me);
 void    XAPP__StatsShowSummary(XAPP_t * const me);
-void    XAPP__SigIntHandler(int sig);
+void    XAPP__StatsComputeSummary(XAPP_t * const me);
+void    XAPP__StatsComputeRttAvg(XAPP_t * const me);
+void    XAPP__StatsComputeRttStDev(XAPP_t * const me);
 void    XAPP__Wait(XAPP_t * const me);
+void    XAPP__SigHandler(int sig, siginfo_t *si, void *uc);
 
 #endif /* XAPP_H */
 /*>
@@ -123,20 +135,26 @@ void    XAPP__Wait(XAPP_t * const me);
  * verify the address on rxPacket
  * verify the sequence on rxPacket
  * verify the message type
- * create method app_StatsComputeSummary
- * create method app_StatsShowSummary
- * create method app_StatsShowRtt
- * manage error 
+ * manage error state
  * set root privilege
  * set the proper load data according to iputeils ref.
  * classify all the classes 
- * ttl update
+ * update packet being sent with sequence number
+   + ---- seq should start from 0
+ * handle verbose flag and usage flag
+ * [ x ] - add timer to time sent packet; wake up thread with sig alarm 
+ * [ x ] - manage dynamic memory
+ * [ x ] - create method app_StatsComputeSummary
+ * [ x ] - create method app_StatsShowSummary
+ * [ x ] - create method app_StatsShowRtt
+ * [ x ] - ttl update
  * [ x ] - handle signal ctrl + c 
- * [ x ] - add timer to time sent packet
  * [ x ] - make socket non-blocking
  * [ x ] - create method app_StatsUpdate
  * [ x ] - verify the checksum
- * == info ==
+ * ==========
+ *    INFO 
+ * ==========
  * /usr/local/bin/ping -v -c 5 8.8.8.8
  * sudo setcap cap_net_raw+ep ./my_ping_program
  * Reversible (via sudo setcap -r ./my_ping_program)

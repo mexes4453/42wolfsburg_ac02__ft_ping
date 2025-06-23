@@ -49,8 +49,15 @@ void ICMP_ECHO__ParseFrom( ICMP_ECHO_t *me, char unsigned *buf,
 
 void ICMP_ECHO__Destroy(ICMP_ECHO_t * const me)
 {
-    //XNET_UTILS__Destroy((void *)&(me->pData));
-    XNET_UTILS__Destroy((void **)&(me->pPktChkSum));
+    if (me == NULL) return;
+    if (me->pData)
+    {
+        XNET_UTILS__Destroy((void **)&(me->pData));
+    }
+    if (me->pPktChkSum)
+    {
+        XNET_UTILS__Destroy((void **)&(me->pPktChkSum));
+    }
 }
 
 

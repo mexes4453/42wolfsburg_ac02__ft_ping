@@ -8,7 +8,8 @@ int main(int argc, char *argv[])
     XAPP_t *pAppVar;
 
     /* Establish handler for signal (SIGINT) */
-    signal(SIGINT, XAPP__SigIntHandler);
+    pAppVar = XAPP__GetInstance();
+    //signal(SIGINT, XAPP__SigIntHandler);
 
     /* parse argument */
 #if 1
@@ -62,6 +63,9 @@ int main(int argc, char *argv[])
             printf("\nNothing to read !\n");
 #endif
         }
+        /*> 
+         * Put process to sleep and Wait for timer set prior to
+         * transmit to expire before sending the next packet */
         XAPP__Wait(pAppVar);
         /* send tx packet  */
         //if (pAppVar->pktCntTx <= XAPP__DEF_REQNBR)

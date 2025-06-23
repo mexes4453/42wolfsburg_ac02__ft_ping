@@ -18,5 +18,6 @@ void XTIMER__Sum(XTIMER__timespec_t *pTs1, XTIMER__timespec_t *pTs2,
                                                 XTIMER__timespec_t *pRes);
 
 
-void  XTIMER__ShowTimeSpec(XTIMER__timespec_t *pTs);
+void    XTIMER__ShowTimeSpec(XTIMER__timespec_t *pTs);
+double  XTIMER__ConvertTsToSec(XTIMER__timespec_t *pTs);
 #endif

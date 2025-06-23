@@ -85,7 +85,7 @@ void XPROTO_IP__ShowDetails(XPROTO_IP_t * const me)
                                  htons(me->flag_fragOffset),
                                  me->flag,
                                  me->fragOffset,
-                                 me->tol, me->tol,
+                                 me->ttl, me->ttl,
                                  me->protocol,
                                  htons(me->hdrChkSum),
                                  htonl(me->addrSrc),
@@ -96,20 +96,29 @@ void XPROTO_IP__ShowDetails(XPROTO_IP_t * const me)
     printf("\n");
 }
 
+
+
+
 void XPROTO_IP__Destroy(XPROTO_IP_t * const me)
 {
+    if (me == NULL) return ;
+
     if (me->pData != NULL)
     {
-        free(me->pData);
-        me->pData = NULL;
+        XNET_UTILS__Destroy((void **)&(me->pData));
     } 
 
     if (me->pOption != NULL) 
     {
-        free(me->pOption);
-        me->pOption = NULL;
+        XNET_UTILS__Destroy((void **)&(me->pOption));
+    } 
+
+    if (me->pOption != NULL) 
+    {
+        XNET_UTILS__Destroy((void **)&(me->pPktChkSum));
     } 
 }
+
 
 
 
