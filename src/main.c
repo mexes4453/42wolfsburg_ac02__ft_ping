@@ -7,9 +7,7 @@ int main(int argc, char *argv[])
     int     retCode;
     XAPP_t *pAppVar;
 
-    /* Establish handler for signal (SIGINT) */
     pAppVar = XAPP__GetInstance();
-    //signal(SIGINT, XAPP__SigIntHandler);
 
     /* parse argument */
 #if 1
@@ -56,6 +54,7 @@ int main(int argc, char *argv[])
                     }
                 }
             }
+            pause();
         }
         else
         {

@@ -12,6 +12,7 @@
 # include "../inc/icmp_echo.h"
 
 #define XAPP__ADDR_DST  "142.250.181.238"   ///< Google.com ip addr
+#define XAPP__ADDR_NAME  "www.google.com"   ///< Google.com ip addr
 #define XAPP__DEF_REQNBR          (4)
 #define XAPP__SOCKFD_MAX_NBR      (1)
 #define XAPP__RX_BUFSZ            (1024)
@@ -137,10 +138,11 @@ void    XAPP__SigHandler(int sig, siginfo_t *si, void *uc);
  * verify the message type
  * manage error state
  * set root privilege
- * set the proper load data according to iputeils ref.
  * classify all the classes 
- * update packet being sent with sequence number
-   + ---- seq should start from 0
+ * set the proper load data according to iputeils ref.
+ + --- update packet being sent with sequence number
+ + --- seq should start from 0
+ *
  * handle verbose flag and usage flag
  * [ x ] - add timer to time sent packet; wake up thread with sig alarm 
  * [ x ] - manage dynamic memory

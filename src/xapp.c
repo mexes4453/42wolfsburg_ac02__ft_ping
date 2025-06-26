@@ -15,6 +15,19 @@ int XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr)
 {
     int retCode = 0;
 
+    /* Initialise the sig action and event */
+    /* Establish handler for signal (SIGINT & SIGALRM) */
+    me->timerEvt.sigev_signo = SIGALRM;
+    me->timerEvt.sigev_notify = SIGEV_SIGNAL;
+    me->timerEvt.sigev_value.sival_ptr= &(me->timerId);
+    
+    me->sa.sa_flags = SA_SIGINFO;
+    me->sa.sa_sigaction = XAPP__SigHandler;
+    sigemptyset(&(me->sa.sa_mask));
+    sigaction(SIGALRM, &(me->sa), NULL);
+    sigaction(SIGINT, &(me->sa), NULL);
+
+
     memset( (void *)me, 0, sizeof(XAPP_t));
     me->dstAddrLen = sizeof(struct sockaddr_in);
 
@@ -26,6 +39,7 @@ int XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr)
     if (retCode != 0)
     {
         fprintf(stderr, "%s\n", gai_strerror(retCode));
+        goto labelExit;
     }
     else
     {
@@ -60,17 +74,6 @@ int XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr)
     me->fds->events = POLLIN;
     me->stats.tPoll.tv_sec = XAPP__POLL_BLOCK_DURATION; 
     
-    /* Initialise the sig action and event */
-    me->timerEvt.sigev_signo = SIGALRM;
-    me->timerEvt.sigev_notify = SIGEV_SIGNAL;
-    me->timerEvt.sigev_value.sival_ptr= &(me->timerId);
-    
-    me->sa.sa_flags = SA_SIGINFO;
-    me->sa.sa_sigaction = XAPP__SigHandler;
-    sigemptyset(&(me->sa.sa_mask));
-    sigaction(SIGALRM, &(me->sa), NULL);
-    sigaction(SIGINT, &(me->sa), NULL);
-
 
     /* Create timer */
     me->timerVal.it_value.tv_sec = XAPP__POLL_BLOCK_DURATION; /* 1 Second */
@@ -184,6 +187,8 @@ int XAPP__TxPacket(XAPP_t * const me)
 
     /* send data to dest address */
     XAPP__GetTimeOfStart(me);
+    //me->timerVal.it_value.tv_sec = 2;
+    alarm(1);
     retCode = timer_settime(me->timerId, 0, &(me->timerVal), NULL);
     me->datalenTx = sendto(me->sockfd, (void *)(me->pIcmpHdrTx->pPktChkSum), 
                                        me->pIcmpHdrTx->totalPacketLen,
@@ -631,6 +636,16 @@ labelExit:
 
 void    XAPP__Wait(XAPP_t * const me)
 {
+    sigset_t setPending;
+    sigemptyset(&setPending);
+    //sigaddset(&setPending, SIGALRM);
+    sigpending(&setPending);
+    if (sigismember(&setPending, SIGALRM))
+    {
+        printf("pending\n");
+    }
+    if (me){}
+#if 0
     XTIMER__timespec_t timeCurr;
     XTIMER__timespec_t duration;
     int long timeValCheck;
@@ -651,6 +666,7 @@ void    XAPP__Wait(XAPP_t * const me)
             pause(); 
         }
     }
+#endif
 }
 
 
