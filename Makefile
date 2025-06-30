@@ -17,7 +17,7 @@ DIR_DEP = $(DIR_PROJECT)/dep
 SRCS_FILES_CPP:=
 
 SRCS_FILES_C:=  main.c xnet.c xproto_ip.c xproto_icmp.c xnet_utils.c xapp.c \
-                xtimer.c icmp_echo.c
+                xtimer.c icmp_echo.c xerr.c
 
 OBJ_FILES:= $(SRCS_FILES_CPP:.cpp=.o) $(SRCS_FILES_C:.c=.o)
 $(info $(OBJ_FILES))
@@ -94,7 +94,7 @@ define LIB_MAKE
 	@cd $(1); make > $(VAR_TRASH); cp $(2) $(DIR_PROJECT);
 endef
 define MAKE_EXE
-	$(1) ./$(NAME) $(ARGS)
+	$(1) ./$(NAME) $(ARGS)  -v 142.250.181.238 
 endef
 
 

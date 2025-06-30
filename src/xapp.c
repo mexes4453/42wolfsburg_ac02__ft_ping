@@ -10,10 +10,60 @@ XAPP_t *XAPP__GetInstance(void)
 
 
 
+int     XAPP__GetOpt(XAPP_t * const me, int argc, char *argv[])
+{
+    int retCode = XAPP__enRetCode_GetOpt_Init;
+    int idxArgc = 1;                /* program name is idx 0 */
 
-int XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr)
+    while ( idxArgc < argc )
+    {
+        if ( strcmp(argv[ idxArgc ], "-v") == 0)
+        {
+            me->option.optVerbose = 1;
+            printf("verbose( %d )\n", me->option.optVerbose);
+        }
+        else if ( strcmp(argv[ idxArgc ], "-?") == 0)
+        {
+            me->option.optUsage = 1;
+            printf("usage( %d )\n", me->option.optUsage);
+        }
+        else if ( strcmp(argv[ idxArgc ], "-c") == 0)
+        {
+            idxArgc += 1;
+            me->option.optPktCnt = atoi(argv[idxArgc]);
+            printf("count( %ld )\n", me->option.optPktCnt);
+        }
+        else if ( strcmp(argv[ idxArgc ], "-ttl") == 0)
+        {
+            idxArgc += 1;
+            me->option.optTimeToLive = atoi(argv[idxArgc]);
+            printf("ttl( %ld )\n", me->option.optTimeToLive);
+        }
+        else
+        {
+            me->option.pOptHostAddr = argv[idxArgc];
+            printf("addr( %s )\n", me->option.pOptHostAddr);
+        }
+        ++idxArgc;
+    }
+    retCode = EXIT_SUCCESS;
+    return (retCode);
+}
+
+
+
+
+int     XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr, int argc, char *argv[])
 {
     int retCode = 0;
+    memset( (void *)me, 0, sizeof(XAPP_t));
+
+    /* Initialise the parser */
+    retCode = XAPP__GetOpt(me, argc, argv);
+    XNET_UTILS__ASSERT_UPD_REDIRECT((retCode ==  EXIT_SUCCESS), 
+                                    &retCode,
+                                    XAPP__enRetCode_Ctor_GetOptFailed,
+                                    labelExit);
 
     /* Initialise the sig action and event */
     /* Establish handler for signal (SIGINT & SIGALRM) */
@@ -28,7 +78,6 @@ int XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr)
     sigaction(SIGINT, &(me->sa), NULL);
 
 
-    memset( (void *)me, 0, sizeof(XAPP_t));
     me->dstAddrLen = sizeof(struct sockaddr_in);
 
     /* Initialise hints attribute */
@@ -46,9 +95,6 @@ int XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr)
 #ifdef XAPP_DEBUG
         XNET__ShowAddrInfo(me->pAddrInfo);
 #endif
-        printf(XAPP__INFO_PING_START, me->pAddrInfo->ai_canonname,
-                                      me->pAddrInfo->ai_canonname,
-                                      XAPP__DEF_ICMP_DATA_SIZE);
     }
 
     /* Set the process id to server as all packet id */
@@ -152,14 +198,28 @@ int XAPP__CreateIcmpPacket(XAPP_t * const me, XPROTO_ICMP__eType_t msgType)
     /* Create icmp packet for transmission */
     if (msgType) {}
     retCode = ICMP_ECHO__CreatePacket(me->pIcmpHdrTx,
-                                            0,
-                                            me->pid,
-                                            me->seqNbr);
+                                      0,
+                                      me->pid,
+                                      me->seqNbr);
     retCode = EXIT_SUCCESS;
 labelExit:
     return (retCode);
 }
 
+
+
+
+void    XAPP__ShowStartMsg(XAPP_t * const me)
+{
+    printf(XAPP__INFO_PING_START, me->pAddrInfo->ai_canonname,
+                                  me->pAddrInfo->ai_canonname,
+                                  XAPP__DEF_ICMP_DATA_SIZE);
+    if (me->option.optVerbose)
+    {
+        printf(", id 0x%x = %d", me->pid, me->pid);
+    }
+    printf("\n");
+}
 
 
 
@@ -187,9 +247,8 @@ int XAPP__TxPacket(XAPP_t * const me)
 
     /* send data to dest address */
     XAPP__GetTimeOfStart(me);
-    //me->timerVal.it_value.tv_sec = 2;
     alarm(1);
-    retCode = timer_settime(me->timerId, 0, &(me->timerVal), NULL);
+    //retCode = timer_settime(me->timerId, 0, &(me->timerVal), NULL);
     me->datalenTx = sendto(me->sockfd, (void *)(me->pIcmpHdrTx->pPktChkSum), 
                                        me->pIcmpHdrTx->totalPacketLen,
                                        0,
@@ -200,23 +259,25 @@ int XAPP__TxPacket(XAPP_t * const me)
     XPROTO_ICMP__ShowDetails(me->pIcmpHdr);               
 #endif
 
-    if (me->datalenTx <= 0)
-    {
-        perror("send error\n");
-    }
-    else
-    {
-#ifdef XNET__DEBUG
-        printf("success: sent (%ld)\n", me->datalenTx);
-        printf("pid: identifier (%x)\n", me->pid);
-        printf("pid: checksum (%x)\n", me->pIcmpHdr->checksum);
-        printf("sent message type: %d\n", me->pIcmpHdr->type);
+    XNET_UTILS__ASSERT_UPD_REDIRECT((me->datalenTx > 0),
+        &retCode,
+        XAPP__enRetCode_TxPacket_SendToFailed,
+        labelExit);
+
+#ifdef XAPP__DEBUG
+    printf("success: sent (%ld)\n", me->datalenTx);
+    printf("pid: identifier (%x)\n", me->pid);
+    printf("pid: checksum (%x)\n", me->pIcmpHdrTx->icmp.checksum);
+    printf("sent message type: %d\n", me->pIcmpHdrTx->icmp.type);
 #endif  
-        (me->pktCntTx)++;
-        (me->seqNbr)++;
-    }
+    (me->pktCntTx)++;
+    (me->seqNbr)++;
+    retCode = EXIT_SUCCESS;
 
 labelExit:
+#ifdef XAPP__DEBUG
+    printf("tx count : ( %ld ); rc( %d )\n", me->pktCntTx, retCode);
+#endif  
     return (retCode);
 }
     
@@ -256,7 +317,7 @@ void XAPP__Destroy(XAPP_t * const me)
     XAPP__statsRttRecord_t *pRttRec  = NULL;
 
 
-    XAPP__StatsShowSummary(me);
+    
 
     if (me->pIpHdr)
     {
@@ -501,6 +562,21 @@ static void XAPP__StrFindReplace(char *str, char s, char r )
 
 
 
+
+static int XAPP__StatsComputePercentage(XAPP_t * const me)
+{
+    int res = 0;
+
+    if ( me->pktCntTx)
+    {
+        res = ((me->pktCntTx - me->pktCntRx) * 100) / me->pktCntTx;
+    }
+    return (res);
+}
+
+
+
+
 void    XAPP__StatsShowSummary(XAPP_t * const me)
 {
     XAPP__StatsComputeSummary(me);
@@ -523,7 +599,7 @@ void    XAPP__StatsShowSummary(XAPP_t * const me)
                 XAPP__MSG_FMT_STATS,
                 me->pktCntTx,
                 me->pktCntRx,
-                ((me->pktCntTx - me->pktCntRx) * 100) / me->pktCntTx,
+                XAPP__StatsComputePercentage(me),
                 '%',
                 XTIMER__ConvertTsToSec(&(me->stats.tRttMin)) * 1000,
                 XTIMER__ConvertTsToSec(&(me->stats.tRttAvg)) * 1000,
@@ -536,7 +612,6 @@ void    XAPP__StatsShowSummary(XAPP_t * const me)
     XAPP__StrFindReplace(me->strText, '.', ',');
     printf("%s", me->strText);
 }
-
 
 
 
@@ -636,37 +711,28 @@ labelExit:
 
 void    XAPP__Wait(XAPP_t * const me)
 {
-    sigset_t setPending;
-    sigemptyset(&setPending);
-    //sigaddset(&setPending, SIGALRM);
-    sigpending(&setPending);
-    if (sigismember(&setPending, SIGALRM))
-    {
-        printf("pending\n");
-    }
-    if (me){}
-#if 0
     XTIMER__timespec_t timeCurr;
     XTIMER__timespec_t duration;
-    int long timeValCheck;
 
-    timeValCheck = me->stats.tStart.tv_nsec + me->stats.tStart.tv_sec;
     memset((void *)&duration, 0, sizeof(duration));
+    memset((void *)&timeCurr, 0, sizeof(timeCurr));
 
     /* Check to see that a time stamp was recorded prior to packet transmission */
-    if (timeValCheck) 
+    if ( me->stats.tStart.tv_nsec + me->stats.tStart.tv_sec != 0)
     {
         clock_gettime(CLOCK_MONOTONIC, &timeCurr);
         XTIMER__Diff(&(timeCurr), &(me->stats.tStart), &(duration));
-        /*> Check to see if the duration was below 1 second */
-        if ( duration.tv_sec < 1)
-        {
-            /*>
-             * wait for timer signal to wake the process up */
-            pause(); 
-        }
-    }
+#ifdef XAPP__DEBUG
+        XTIMER__ShowTimeSpec(&(me->stats.tStart));
+        XTIMER__ShowTimeSpec(&(timeCurr));
+        XTIMER__ShowTimeSpec(&(duration));
 #endif
+        if ( !(duration.tv_sec))
+        {
+            pause();
+        }
+        memset((void *)&(me->stats.tStart), 0, sizeof(XTIMER__timespec_t));
+    }
 }
 
 
@@ -700,6 +766,7 @@ void XAPP__SigHandler(int sig, siginfo_t *si, void *uc)
             exit(EXIT_SUCCESS);
             break ;
         }
+        default: break ;
     }
     if (uc && si){ /* avoid compiler warnining and error */ }
 }

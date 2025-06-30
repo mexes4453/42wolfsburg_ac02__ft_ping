@@ -1,42 +1,36 @@
 #include "../inc/xapp.h"
+#include "../inc/xerr.h"
 
 
 int main(int argc, char *argv[])
 {
-    int     idxArg;
     int     retCode;
     XAPP_t *pAppVar;
 
-    pAppVar = XAPP__GetInstance();
-
-    /* parse argument */
-#if 1
-    int opt = 1;
-    int optind =1, optopt=1;
-    if (argc > 1)
-    {
-        //ipDst = argv[idxArg];
-        while ( (opt = getopt(argc, argv, ":v:x")) != -1) 
-        {
-            printf("%c - %s %s", opt, argv[optind], argv[optopt]);
-            printf("%s\n", argv[idxArg]);
-            ++idxArg;
-        }
-    }
-#endif
-
     /* Initialise the variables */
-    idxArg = 1;
     pAppVar = XAPP__GetInstance();
-    retCode = XAPP__Ctor(pAppVar, XAPP__ADDR_DST);
+    retCode = XAPP__Ctor(pAppVar, XAPP__ADDR_DST, argc, argv);
+    XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == 0), &retCode, retCode, labelExit);
 
-  
+    if (pAppVar->option.optUsage)
+    {
+        printf("Usage: ft__ping [OPTION...] HOST ... \
+                \nSend ICMP ECHO_REQUEST packets to network hosts. \
+                \n\nOptions valid for all request types: \
+                \n-?,      help instruction  \
+                \n-v,      verbose output \
+                \n-ttl=N   specify N as time-to-live \
+                \n");
+        goto labelCleanup;
+    }
+    
+    XAPP__ShowStartMsg(pAppVar);
+
     while (XAPP__TRUE)
     {
         /*>
          * Blocks indefinitely until something happens in any of the 
          * file descriptors */
-        //pAppVar->ready = poll(pAppVar->fds, pAppVar->nfds, XAPP__POLL_BLOCK_DURATION);
         pAppVar->ready = ppoll(pAppVar->fds, pAppVar->nfds, &(pAppVar->stats.tPoll), NULL);
                              
         if (pAppVar->ready)
@@ -54,7 +48,6 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-            pause();
         }
         else
         {
@@ -66,21 +59,31 @@ int main(int argc, char *argv[])
          * Put process to sleep and Wait for timer set prior to
          * transmit to expire before sending the next packet */
         XAPP__Wait(pAppVar);
+
         /* send tx packet  */
-        //if (pAppVar->pktCntTx <= XAPP__DEF_REQNBR)
-        if (pAppVar->pktCntTx >= 5)
+        if (pAppVar->pktCntTx >= XAPP__DEF_REQNBR)
         {
             break;
         }
         else
         {
-            XAPP__TxPacket(pAppVar);
+            retCode = XAPP__TxPacket(pAppVar);
+            XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == 0), &retCode, retCode, labelExit);
         }
     }
 
 
-//labelExit:
-    /* clean up */
+
+labelExit:
+    if (retCode != EXIT_SUCCESS)
+    {
+        XERR__HandleError(retCode, argv[0]);
+    }
+    else
+    {
+        XAPP__StatsShowSummary(pAppVar);
+    }
+labelCleanup: /* clean up */
     XAPP__Destroy(pAppVar);
     return (retCode);
 }

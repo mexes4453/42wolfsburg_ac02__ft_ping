@@ -20,11 +20,11 @@
 #define XAPP__DEF_ICMP_DATA_SIZE  (56)
 #define XAPP__TRUE                (1)
 #define XAPP__POLL_BLOCK_DURATION (1)    ///< 1 second
-#define XAPP__INFO_PING_START     "PING %s (%s): %d data bytes\n"
+#define XAPP__INFO_PING_START     "PING %s (%s): %d data bytes"
 #define XAPP__MSG_FMT_RTT1         "%ld bytes from %s: "
 #define XAPP__MSG_FMT_RTT2         "icmp_seq=%d ttl=%d time=%.3f ms\n"
 #define XAPP__MSG_FMT_STATS_TITLE "--- %s ping statistics ---"
-#define XAPP__MSG_FMT_STATS       "\n %ld packets transmitted, %ld packets received, %ld%c packet loss \
+#define XAPP__MSG_FMT_STATS       "\n %ld packets transmitted, %ld packets received, %d%c packet loss \
                                    \n round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms \n"
 
 #ifdef XAPP__DEBUG
@@ -33,6 +33,8 @@
 typedef enum XAPP__retCode_e
 {
     XAPP__enRetCode_Ctor_CreateSockFailed = -355,
+    XAPP__enRetCode_GetOpt_Init,
+    XAPP__enRetCode_Ctor_GetOptFailed,
     XAPP__enRetCode_CreateIcmpHdr_Failed,
     XAPP__enRetCode_CreateIcmpHdr_MallocFailed,
     XAPP__enRetCode_CreateIcmpPayload_Failed,
@@ -43,6 +45,7 @@ typedef enum XAPP__retCode_e
     XAPP__enRetCode_RxPacket_Init,
     XAPP__enRetCode_RxPacket_Failed,
     XAPP__enRetCode_TxPacket_Init,
+    XAPP__enRetCode_TxPacket_SendToFailed,
 }   XAPP__retCode_t;
 
 
@@ -60,17 +63,28 @@ struct XAPP__statsRttRecord_s
 
 typedef struct XAPP__stats_e
 {
-    XTIMER__timespec_t     tRttMin;
-    XTIMER__timespec_t     tRttMax;
-    XTIMER__timespec_t     tRttAvg;
-    XTIMER__timespec_t     tRttStdDev;
-    XTIMER__timespec_t     tStart;
-    XTIMER__timespec_t     tEnd;
-    XTIMER__timespec_t     tPoll;
-    XTIMER__timespec_t     tDuration;
+    XTIMER__timespec_t      tRttMin;
+    XTIMER__timespec_t      tRttMax;
+    XTIMER__timespec_t      tRttAvg;
+    XTIMER__timespec_t      tRttStdDev;
+    XTIMER__timespec_t      tStart;
+    XTIMER__timespec_t      tEnd;
+    XTIMER__timespec_t      tPoll;
+    XTIMER__timespec_t      tDuration;
     XAPP__statsRttRecord_t *pRttRec;
 }   XAPP__stats_t;
 
+
+typedef struct XAPP__opt_s
+{
+
+    uint8_t optUsage:1; 
+    uint8_t optVerbose:1; 
+    uint8_t optReserved:6;
+    size_t  optPktCnt;
+    size_t  optTimeToLive;
+    char   *pOptHostAddr;
+}   XAPP__opt_t;
 
 
 
@@ -78,7 +92,7 @@ typedef struct XAPP_s
 {
     struct addrinfo    hints;
     struct addrinfo   *pAddrInfo;
-    /* parser to parse user input */
+    XAPP__opt_t        option;          ; /* parser to parse user input */
     /* ttl */
     ssize_t             pktCntTx;
     ssize_t             pktCntRx;
@@ -111,7 +125,8 @@ typedef struct XAPP_s
 
 
 XAPP_t *XAPP__GetInstance(void);
-int     XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr);
+int     XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr, int argc, char *argv[]);
+int     XAPP__GetOpt(XAPP_t * const me, int argc, char *argv[]);
 int     XAPP__CreateIcmpHeader(XAPP_t * const me);
 int     XAPP__CreateIcmpPacket(XAPP_t * const me, XPROTO_ICMP__eType_t msgType);
 int     XAPP__TxPacket(XAPP_t * const me); 
@@ -129,21 +144,21 @@ void    XAPP__StatsComputeRttAvg(XAPP_t * const me);
 void    XAPP__StatsComputeRttStDev(XAPP_t * const me);
 void    XAPP__Wait(XAPP_t * const me);
 void    XAPP__SigHandler(int sig, siginfo_t *si, void *uc);
+void    XAPP__ShowStartMsg(XAPP_t * const me);
 
 #endif /* XAPP_H */
 /*>
- * parse user input
  * verify the address on rxPacket
  * verify the sequence on rxPacket
  * verify the message type
  * manage error state
  * set root privilege
- * classify all the classes 
  * set the proper load data according to iputeils ref.
  + --- update packet being sent with sequence number
  + --- seq should start from 0
  *
- * handle verbose flag and usage flag
+ * [ x ] - handle verbose flag and usage flag
+ * [ x ] - parse user input to option.
  * [ x ] - add timer to time sent packet; wake up thread with sig alarm 
  * [ x ] - manage dynamic memory
  * [ x ] - create method app_StatsComputeSummary
