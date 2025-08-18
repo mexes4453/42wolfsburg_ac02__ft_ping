@@ -10,6 +10,57 @@ XAPP_t *XAPP__GetInstance(void)
 
 
 
+
+int XAPP__HandleUserInput( XAPP_t *me, int argc, char *argv[])
+{
+    int  argIdx;
+    int  retCode = 0;
+    char *str = NULL;
+
+
+    printf("Prog: %s\n", argv[0]);
+    if (argc > 1)
+    {
+        argIdx = 1;
+        while (argIdx < argc)
+        {
+            /* access and retrieve string at argv idx */
+            // chr = argv[ argIdx ];
+
+            /* stripwhitespace around string - leading and trailing */
+            XPARSER__StripWhiteSpace( argv[ argIdx ], &str);
+
+            printf("args(%s)\n", str);
+
+            /* Check type of argument (option or ip addres ) */
+            if ( str[0] == '-')
+            {
+                printf("==> opt: \n");
+                retCode = XAPP__HandleOpt(str, argv, &argIdx);
+            }
+            else
+            {
+                /* process ip address */
+                printf("==> adr: \n");
+            }
+
+            /* Evaluate return Code */
+            if (retCode != 0)
+            {
+                printf("Error: %d\n", retCode);
+                goto labelExit;
+            }
+            argIdx++;
+        }
+    }
+labelExit:
+    retCode = -1; /* for testing purpose only */
+    return (retCode);
+}
+
+
+
+#if 0 /* NOT_USED */
 int     XAPP__GetOpt(XAPP_t * const me, int argc, char *argv[])
 {
     int retCode = XAPP__enRetCode_GetOpt_Init;
@@ -49,6 +100,112 @@ int     XAPP__GetOpt(XAPP_t * const me, int argc, char *argv[])
     retCode = EXIT_SUCCESS;
     return (retCode);
 }
+#endif 
+
+
+
+
+int XAPP__ProcessOptionChar( char *pChr, char *argv[], int *pArgIdx)
+{
+    int  retCode = 0;
+    char chr = *pChr;
+    int  cntValue = 0;
+
+    switch (chr)
+    {
+        case 'v':
+            {
+                printf("setting verbose flag\n");
+                retCode = 0;
+                break ;
+            }
+        case '?':
+            {
+                printf("show the program usage here\n");
+                retCode = -501;
+                break ;
+            }
+        case 'c':
+            {
+                if ( *(pChr + 1) != '\0' )
+                {
+                    printf("Invalid option format for (c)\n");
+                    retCode = -502;
+                    goto labelExit;
+                }
+                /* increment argument index to where count value is expected */ 
+                *pArgIdx += 1;
+                if ( argv[ (*pArgIdx) ] == NULL )
+                {
+                    printf("Missing value for option (c)\n");
+                    retCode = -503;
+                    goto labelExit;
+                }
+                printf("Retrieve count value string from next argv[ idx ] and conv to int\n");
+                cntValue = atoi( argv[ *pArgIdx ] );
+
+                printf("Count value: (%d)\n", cntValue);
+                if (cntValue == 0)
+                {
+                    printf("Invalid count value for option (c)\n");
+                    retCode = -504;
+                    goto labelExit;
+                }
+
+                printf("update the count value variable in app instance\n");
+                retCode = 0;
+                break ;
+            }
+        default:
+        {
+            printf("Unknown option\n");
+            retCode = 506;
+            break ;
+        }
+    }
+labelExit:
+    return (retCode);
+}
+
+
+
+
+int XAPP__HandleOpt(char *strOpt, char *argv[], int *pArgIdx)
+{
+    int retCode = 0;
+
+    /* check for any whitespace in option str */
+    if (XPARSER__IsWhiteSpaceInStr(strOpt) || (strlen(strOpt) <= 1)) 
+    {
+        retCode = -500; /* invalid option format */
+        goto labelExit;
+    }
+
+    do
+    {
+        /* Note that the first char in string is '-'. Hence, its skipped. */
+        strOpt++;
+        
+        if ( *strOpt == '\0' )
+        {
+            break ;
+        }
+        retCode = XAPP__ProcessOptionChar( strOpt, argv, pArgIdx);
+    } while ( retCode == 0);
+
+labelExit:
+    return (retCode);
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -59,7 +216,7 @@ int     XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr, int argc, ch
     memset( (void *)me, 0, sizeof(XAPP_t));
 
     /* Initialise the parser */
-    retCode = XAPP__GetOpt(me, argc, argv);
+    retCode = XAPP__HandleUserInput(me, argc, argv);
     XNET_UTILS__ASSERT_UPD_REDIRECT((retCode ==  EXIT_SUCCESS), 
                                     &retCode,
                                     XAPP__enRetCode_Ctor_GetOptFailed,

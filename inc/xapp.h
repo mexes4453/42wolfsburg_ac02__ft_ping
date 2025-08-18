@@ -83,7 +83,7 @@ typedef struct XAPP__opt_s
     uint8_t optReserved:6;
     size_t  optPktCnt;
     size_t  optTimeToLive;
-    char   *pOptHostAddr;
+    char    *pOptHostAddr;
 }   XAPP__opt_t;
 
 
@@ -92,6 +92,7 @@ typedef struct XAPP_s
 {
     struct addrinfo    hints;
     struct addrinfo   *pAddrInfo;
+    char              *strIpAddr;
     XAPP__opt_t        option;          ; /* parser to parse user input */
     /* ttl */
     ssize_t             pktCntTx;
@@ -125,26 +126,28 @@ typedef struct XAPP_s
 
 
 XAPP_t *XAPP__GetInstance(void);
-int     XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr, int argc, char *argv[]);
-int     XAPP__GetOpt(XAPP_t * const me, int argc, char *argv[]);
-int     XAPP__CreateIcmpHeader(XAPP_t * const me);
-int     XAPP__CreateIcmpPacket(XAPP_t * const me, XPROTO_ICMP__eType_t msgType);
-int     XAPP__TxPacket(XAPP_t * const me); 
-int     XAPP__RxPacket(XAPP_t * const me);
-void    XAPP__Destroy(XAPP_t * const me);
-int     XAPP__ValidateRxPkt(XAPP_t * const me);
-void    XAPP__GetTimeOfStart(XAPP_t * const me);
-void    XAPP__GetTimeOfEnd(XAPP_t * const me);
-void    XAPP__StatsComputeRtt(XAPP_t * const me);
-void    XAPP__StatsUpdate(XAPP_t * const me);
-void    XAPP__StatsShowRtt(XAPP_t * const me);
-void    XAPP__StatsShowSummary(XAPP_t * const me);
-void    XAPP__StatsComputeSummary(XAPP_t * const me);
-void    XAPP__StatsComputeRttAvg(XAPP_t * const me);
-void    XAPP__StatsComputeRttStDev(XAPP_t * const me);
-void    XAPP__Wait(XAPP_t * const me);
-void    XAPP__SigHandler(int sig, siginfo_t *si, void *uc);
-void    XAPP__ShowStartMsg(XAPP_t * const me);
+int     XAPP__Ctor( XAPP_t * const me, char const * const strIpAddr, int argc, char *argv[]);
+int     XAPP__HandleOpt( char *strOpt, char *argv[], int *pArgIdx);
+int     XAPP__ProcessOptionChar( char *pChr, char *argv[], int *pArgIdx);
+int     XAPP__HandleUserInput( XAPP_t * const me, int argc, char *argv[]);
+int     XAPP__CreateIcmpHeader( XAPP_t * const me);
+int     XAPP__CreateIcmpPacket( XAPP_t * const me, XPROTO_ICMP__eType_t msgType);
+int     XAPP__TxPacket( XAPP_t * const me); 
+int     XAPP__RxPacket( XAPP_t * const me);
+void    XAPP__Destroy( XAPP_t * const me);
+int     XAPP__ValidateRxPkt( XAPP_t * const me);
+void    XAPP__GetTimeOfStart( XAPP_t * const me);
+void    XAPP__GetTimeOfEnd( XAPP_t * const me);
+void    XAPP__StatsComputeRtt( XAPP_t * const me);
+void    XAPP__StatsUpdate( XAPP_t * const me);
+void    XAPP__StatsShowRtt( XAPP_t * const me);
+void    XAPP__StatsShowSummary( XAPP_t * const me);
+void    XAPP__StatsComputeSummary( XAPP_t * const me);
+void    XAPP__StatsComputeRttAvg( XAPP_t * const me);
+void    XAPP__StatsComputeRttStDev( XAPP_t * const me);
+void    XAPP__Wait( XAPP_t * const me);
+void    XAPP__SigHandler( int sig, siginfo_t *si, void *uc);
+void    XAPP__ShowStartMsg( XAPP_t * const me);
 
 #endif /* XAPP_H */
 /*>

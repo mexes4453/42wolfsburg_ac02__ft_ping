@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 
     /* Initialise the variables */
     pAppVar = XAPP__GetInstance();
-    retCode = XAPP__Ctor(pAppVar, XAPP__ADDR_DST, argc, argv);
+    retCode = XAPP__Ctor(pAppVar, NULL, argc, argv); /* clean up : remove full from function and prototype */
     XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == 0), &retCode, retCode, labelExit);
 
     if (pAppVar->option.optUsage)

@@ -17,7 +17,7 @@ DIR_DEP = $(DIR_PROJECT)/dep
 SRCS_FILES_CPP:=
 
 SRCS_FILES_C:=  main.c xnet.c xproto_ip.c xproto_icmp.c xnet_utils.c xapp.c \
-                xtimer.c icmp_echo.c xerr.c
+                xtimer.c icmp_echo.c xerr.c xparser.c
 
 OBJ_FILES:= $(SRCS_FILES_CPP:.cpp=.o) $(SRCS_FILES_C:.c=.o)
 $(info $(OBJ_FILES))
@@ -48,8 +48,8 @@ USR_LIB_XDIR=libxdir.a
 
 # FLAGS
 CFLAGS = -Werror -Wall -Wextra \
-		 -lrt \
-		 -lm \
+		 #-lrt \
+		 #-lm \
 		 #-DXAPP__DEBUG \
 		 #-DICMP_ECHO__DEBUG \
 		 #-DXNET__DEBUG \
