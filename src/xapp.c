@@ -532,7 +532,7 @@ void XAPP__Destroy(XAPP_t * const me)
     }
 
     /* Destroy timer */
-    timer_delete(me->timerId);
+    //timer_delete(me->timerId);
 
     /* Release the memory for the address information */
     freeaddrinfo(me->pAddrInfo);

@@ -103,10 +103,10 @@ typedef struct XAPP_s
     XPROTO_IP_t        *pIpHdr;
     int                 sockfd;
     short unsigned      pid;
-    timer_t             timerId;
+    //timer_t             timerId;
     struct sigevent     timerEvt;
-    struct itimerspec   timerVal;
-    struct itimerspec   timerValRem;
+    //struct itimerspec   timerVal;
+    //struct itimerspec   timerValRem;
     struct sigaction    sa;
     nfds_t              nfds;
     struct pollfd       fds[XAPP__SOCKFD_MAX_NBR];
