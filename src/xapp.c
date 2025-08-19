@@ -17,33 +17,31 @@ int XAPP__HandleUserInput( XAPP_t *me, int argc, char *argv[])
     int  retCode = 0;
     char *str = NULL;
 
-
-
     printf("Prog: %s\n", argv[0]);
     if (argc > 1)
     {
         argIdx = 1;
         while (argIdx < argc)
         {
-            /* access and retrieve string at argv idx */
-            // chr = argv[ argIdx ];
-
             /* stripwhitespace around string - leading and trailing */
             XPARSER__StripWhiteSpace( argv[ argIdx ], &str);
-
-            printf("args(%s)\n", str);
+#ifdef XAPP__DEBUG_HANDLE_USER_INPUT
+            //printf("args(%s)\n", str);
+#endif /* XAPP__DEBUG_HANDLE_USER_INPUT */
 
             /* Check type of argument (option or ip addres ) */
             if ( str[0] == '-')
             {
-                printf("==> opt: \n");
-                retCode = XAPP__HandleOpt(str, argv, &argIdx);
+                retCode = XAPP__HandleOpt( me, str, argv, &argIdx);
+                
             }
             else
             {
                 /* process ip address */
                 me->strIpAddr = str;
+#ifdef XAPP__DEBUG_HANDLE_USER_INPUT /*============================= */
                 printf("==> adr: %s\n", me->strIpAddr);
+#endif /* XAPP__DEBUG_HANDLE_USER_INPUT ---------------------------- */
             }
 
             /* Evaluate return Code */
@@ -102,28 +100,30 @@ int     XAPP__GetOpt(XAPP_t * const me, int argc, char *argv[])
     retCode = EXIT_SUCCESS;
     return (retCode);
 }
-#endif 
+#endif /* NOT_USED */
 
 
 
 
-int XAPP__ProcessOptionChar( char *pChr, char *argv[], int *pArgIdx)
+int XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx)
 {
     int  retCode = 0;
     char chr = *pChr;
     int  cntValue = 0;
 
+    printf("==> opt: %s\n", (pChr-1));
     switch (chr)
     {
         case 'v':
             {
-                printf("setting verbose flag\n");
+                //printf("setting verbose flag\n");
+                me->option.optVerbose = 1;
                 retCode = 0;
                 break ;
             }
         case '?':
             {
-                printf("show the program usage here\n");
+                printf("%s", XAPP__MSG_FMT_HELP);
                 retCode = -501;
                 break ;
             }
@@ -143,18 +143,19 @@ int XAPP__ProcessOptionChar( char *pChr, char *argv[], int *pArgIdx)
                     retCode = -503;
                     goto labelExit;
                 }
+                /*>
                 printf("Retrieve count value string from next argv[ idx ] and conv to int\n");
+                */
                 cntValue = atoi( argv[ *pArgIdx ] );
+                me->option.optPktCnt = cntValue;
 
-                printf("Count value: (%d)\n", cntValue);
+                printf("Count value: (%ld)\n", me->option.optPktCnt);
                 if (cntValue == 0)
                 {
                     printf("Invalid count value for option (c)\n");
                     retCode = -504;
                     goto labelExit;
                 }
-
-                printf("update the count value variable in app instance\n");
                 retCode = 0;
                 break ;
             }
@@ -172,7 +173,7 @@ labelExit:
 
 
 
-int XAPP__HandleOpt(char *strOpt, char *argv[], int *pArgIdx)
+int XAPP__HandleOpt(XAPP_t * const me, char *strOpt, char *argv[], int *pArgIdx)
 {
     int retCode = 0;
 
@@ -192,7 +193,7 @@ int XAPP__HandleOpt(char *strOpt, char *argv[], int *pArgIdx)
         {
             break ;
         }
-        retCode = XAPP__ProcessOptionChar( strOpt, argv, pArgIdx);
+        retCode = XAPP__ProcessOptionChar( me, strOpt, argv, pArgIdx);
     } while ( retCode == 0);
 
 labelExit:

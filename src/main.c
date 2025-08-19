@@ -13,11 +13,6 @@ int main(int argc, char *argv[])
     //XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == 0), &retCode, retCode, labelExit);
     XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == 0), &retCode, retCode, labelCleanup);
 
-    if (pAppVar->option.optUsage)
-    {
-        printf(XAPP__MSG_FMT_USAGE);
-        goto labelCleanup;
-    }
 
     XAPP__ShowStartMsg(pAppVar);
 

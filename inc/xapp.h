@@ -28,12 +28,14 @@
 #define XAPP__MSG_FMT_STATS_TITLE  "--- %s ping statistics ---"
 #define XAPP__MSG_FMT_STATS        "\n %ld packets transmitted, %ld packets received, %d%c packet loss \
                                     \n round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms \n"
-#define XAPP__MSG_FMT_USAGE        "Usage: ft__ping [OPTION...] HOST ... \
+#define XAPP__MSG_FMT_HELP         "Usage: ft__ping [OPTION...] HOST ... \
                                     \nSend ICMP ECHO_REQUEST packets to network hosts. \
                                     \n\nOptions valid for all request types: \
-                                    \n-?,      help instruction  \
-                                    \n-v,      verbose output \
-                                    \n-ttl=N   specify N as time-to-live \
+                                    \n-?, --help           give this help list \
+                                    \n    --usage          give a short usage message \
+                                    \n-v,                  verbose output \
+                                    \n    --ttl=N          specify N as time-to-live \
+                                    \n-c, --count=NUMBER   stop after sending NUMBER packets \
                                     \n"
 
 #ifdef XAPP__DEBUG
@@ -142,8 +144,8 @@ typedef struct XAPP_s
 
 XAPP_t *XAPP__GetInstance(void);
 int     XAPP__Ctor( XAPP_t * const me, char const * const strIpAddr, int argc, char *argv[]);
-int     XAPP__HandleOpt( char *strOpt, char *argv[], int *pArgIdx);
-int     XAPP__ProcessOptionChar( char *pChr, char *argv[], int *pArgIdx);
+int     XAPP__HandleOpt( XAPP_t * const me, char *strOpt, char *argv[], int *pArgIdx);
+int     XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx);
 int     XAPP__HandleUserInput( XAPP_t * const me, int argc, char *argv[]);
 int     XAPP__CreateIcmpHeader( XAPP_t * const me);
 int     XAPP__CreateIcmpPacket( XAPP_t * const me, XPROTO_ICMP__eType_t msgType);
@@ -166,22 +168,6 @@ void    XAPP__ShowStartMsg( XAPP_t * const me);
 int     XAPP__GetOpt(XAPP_t * const me, int argc, char *argv[]);
 int     XAPP__CreateIcmpHeader(XAPP_t * const me);
 int     XAPP__CreateIcmpPacket(XAPP_t * const me, XPROTO_ICMP__eType_t msgType);
-int     XAPP__TxPacket(XAPP_t * const me); 
-int     XAPP__RxPacket(XAPP_t * const me);
-void    XAPP__Destroy(XAPP_t * const me);
-int     XAPP__ValidateRxPkt(XAPP_t * const me);
-void    XAPP__GetTimeOfStart(XAPP_t * const me);
-void    XAPP__GetTimeOfEnd(XAPP_t * const me);
-void    XAPP__StatsComputeRtt(XAPP_t * const me);
-void    XAPP__StatsUpdate(XAPP_t * const me);
-void    XAPP__StatsShowRtt(XAPP_t * const me);
-void    XAPP__StatsShowSummary(XAPP_t * const me);
-void    XAPP__StatsComputeSummary(XAPP_t * const me);
-void    XAPP__StatsComputeRttAvg(XAPP_t * const me);
-void    XAPP__StatsComputeRttStDev(XAPP_t * const me);
-void    XAPP__Wait(XAPP_t * const me);
-void    XAPP__SigHandler(int sig, siginfo_t *si, void *uc);
-void    XAPP__ShowStartMsg(XAPP_t * const me);
 int     XAPP__IsRxAddrValid(XAPP_t * const me);
 
 #endif /* XAPP_H */
@@ -192,6 +178,7 @@ int     XAPP__IsRxAddrValid(XAPP_t * const me);
  * remove ppoll
  * use recvfrom, sendto
  * use gettimeofday
+ * replace all <string> function with that of libft
  * test user option, args, and input
  * [ x ] - verify the address on rxPacket
  * [ x ] - update packet being sent with sequence number

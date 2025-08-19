@@ -50,6 +50,7 @@ USR_LIB_XDIR=libxdir.a
 CFLAGS = -Werror -Wall -Wextra \
 		 -lrt \
 		 -lm \
+	     -DXAPP__DEBUG_HANDLE_USER_INPUT \
 		 #-DXAPP__DEBUG \
 		 #-DICMP_ECHO__DEBUG \
 		 #-DXNET__DEBUG \
