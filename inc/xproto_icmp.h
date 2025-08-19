@@ -67,6 +67,7 @@ struct XPROTO_ICMP_s
     short unsigned     checksum;
 };
 
+char unsigned XPROTO_ICMP__GetType(XPROTO_ICMP_t * const me);
 #if 0
 void XPROTO_ICMP__Ctor(XPROTO_ICMP_t * const me);
 void XPROTO_ICMP__ParseFrom( XPROTO_ICMP_t *me, char unsigned *buf,

@@ -14,16 +14,10 @@ int main(int argc, char *argv[])
 
     if (pAppVar->option.optUsage)
     {
-        printf("Usage: ft__ping [OPTION...] HOST ... \
-                \nSend ICMP ECHO_REQUEST packets to network hosts. \
-                \n\nOptions valid for all request types: \
-                \n-?,      help instruction  \
-                \n-v,      verbose output \
-                \n-ttl=N   specify N as time-to-live \
-                \n");
+        printf(XAPP__MSG_FMT_USAGE);
         goto labelCleanup;
     }
-    
+
     XAPP__ShowStartMsg(pAppVar);
 
     while (XAPP__TRUE)
@@ -45,6 +39,7 @@ int main(int argc, char *argv[])
                     {
                         pAppVar->pktCntRx++;
                         XAPP__StatsComputeRtt(pAppVar);
+                        XAPP__StatsShowRtt(pAppVar);
                     }
                 }
             }

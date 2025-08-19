@@ -35,6 +35,7 @@ typedef enum ICMP_ECHO__retCode_e
     ICMP_ECHO__enRetCode_ParseFromNet_PdataMallocFailed,
     ICMP_ECHO__enRetCode_IsCheckSumValid_Init,
     ICMP_ECHO__enRetCode_ValidateRxPkt_ParseFromNetFailed,
+    ICMP_ECHO__enRetCode_ValidateRxPkt_InvalidPktType,
     ICMP_ECHO__enRetCode_Failure = -1
 }   ICMP_ECHO__retCode_t;
 

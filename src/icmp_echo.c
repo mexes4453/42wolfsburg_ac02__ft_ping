@@ -188,6 +188,13 @@ int ICMP_ECHO__ValidateRxPkt(ICMP_ECHO_t * const me, char unsigned *buf, ssize_t
         ICMP_ECHO__enRetCode_ValidateRxPkt_ParseFromNetFailed,
         labelExit);
 
+    XNET_UTILS__ASSERT_UPD_REDIRECT( 
+        (XPROTO_ICMP__GetType((XPROTO_ICMP_t *)me) == XPROTO_ICMP__enType_EchoReply),
+        &retCode,
+        ICMP_ECHO__enRetCode_ValidateRxPkt_InvalidPktType,
+        labelExit);
+
+
     retCode = ICMP_ECHO__IsCheckSumValid(me);
 
 #ifdef ICMP_ECHO__DEBUG
@@ -252,3 +259,9 @@ int ICMP_ECHO__IsCheckSumValid(ICMP_ECHO_t * const me)
     return (retCode);
 
 }
+
+
+
+
+
+

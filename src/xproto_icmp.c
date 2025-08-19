@@ -1,7 +1,13 @@
 #include "../inc/xproto_icmp.h"
 
 
+char unsigned  XPROTO_ICMP__GetType(XPROTO_ICMP_t * const me)
+{
+    return (me->type);
+}
+
 #if 0
+
 void XPROTO_ICMP__Ctor(XPROTO_ICMP_t * const me)
 {
     memset((void *)me, 0, sizeof(XPROTO_ICMP_t));

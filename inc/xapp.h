@@ -16,6 +16,7 @@
 #define XAPP__DEF_REQNBR          (4)
 #define XAPP__SOCKFD_MAX_NBR      (1)
 #define XAPP__RX_BUFSZ            (1024)
+#define XAPP__BUFSZ_ADDR          (100)
 #define XAPP__BUFSZ_TXTSTR        (512)
 #define XAPP__DEF_ICMP_DATA_SIZE  (56)
 #define XAPP__TRUE                (1)
@@ -23,9 +24,16 @@
 #define XAPP__INFO_PING_START     "PING %s (%s): %d data bytes"
 #define XAPP__MSG_FMT_RTT1         "%ld bytes from %s: "
 #define XAPP__MSG_FMT_RTT2         "icmp_seq=%d ttl=%d time=%.3f ms\n"
-#define XAPP__MSG_FMT_STATS_TITLE "--- %s ping statistics ---"
-#define XAPP__MSG_FMT_STATS       "\n %ld packets transmitted, %ld packets received, %d%c packet loss \
-                                   \n round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms \n"
+#define XAPP__MSG_FMT_STATS_TITLE  "--- %s ping statistics ---"
+#define XAPP__MSG_FMT_STATS        "\n %ld packets transmitted, %ld packets received, %d%c packet loss \
+                                    \n round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms \n"
+#define XAPP__MSG_FMT_USAGE        "Usage: ft__ping [OPTION...] HOST ... \
+                                    \nSend ICMP ECHO_REQUEST packets to network hosts. \
+                                    \n\nOptions valid for all request types: \
+                                    \n-?,      help instruction  \
+                                    \n-v,      verbose output \
+                                    \n-ttl=N   specify N as time-to-live \
+                                    \n"
 
 #ifdef XAPP__DEBUG
 # define XAPP_D_VALIDATE_RX_PKT "\n[ XAPP::VALIDATE_RX_PKT ]"
@@ -35,6 +43,7 @@ typedef enum XAPP__retCode_e
     XAPP__enRetCode_Ctor_CreateSockFailed = -355,
     XAPP__enRetCode_GetOpt_Init,
     XAPP__enRetCode_Ctor_GetOptFailed,
+    XAPP__enRetCode_Ctor_SysCallgetnameInfoFailed,
     XAPP__enRetCode_CreateIcmpHdr_Failed,
     XAPP__enRetCode_CreateIcmpHdr_MallocFailed,
     XAPP__enRetCode_CreateIcmpPayload_Failed,
@@ -42,10 +51,14 @@ typedef enum XAPP__retCode_e
     XAPP__enRetCode_ValidateRxPkt_MallocFailed,
     XAPP__enRetCode_ValidateRxPkt_InvalidIpFrame,
     XAPP__enRetCode_ValidateRxPkt_WrongIpFrameLen,
+    XAPP__enRetCode_ValidateRxPkt_IsRxAddrValidFailed,
     XAPP__enRetCode_RxPacket_Init,
     XAPP__enRetCode_RxPacket_Failed,
     XAPP__enRetCode_TxPacket_Init,
     XAPP__enRetCode_TxPacket_SendToFailed,
+    XAPP__enRetCode_IsRxAddrValid_Init,
+    XAPP__enRetCode_IsRxAddrValid_AddrResFailed,
+    XAPP__enRetCode_IsRxAddrValid_InvalidRecvAddr
 }   XAPP__retCode_t;
 
 
@@ -77,7 +90,6 @@ typedef struct XAPP__stats_e
 
 typedef struct XAPP__opt_s
 {
-
     uint8_t optUsage:1; 
     uint8_t optVerbose:1; 
     uint8_t optReserved:6;
@@ -119,6 +131,8 @@ typedef struct XAPP_s
     socklen_t           dstAddrLen;
     char unsigned       recvBuf[XAPP__RX_BUFSZ];
     char                strText[XAPP__BUFSZ_TXTSTR];
+    char                txAddrBuf[XAPP__BUFSZ_ADDR];
+    char                rxAddrBuf[XAPP__BUFSZ_ADDR];
     XAPP__stats_t       stats;
 }   XAPP_t;
 
@@ -148,18 +162,38 @@ void    XAPP__StatsComputeRttStDev( XAPP_t * const me);
 void    XAPP__Wait( XAPP_t * const me);
 void    XAPP__SigHandler( int sig, siginfo_t *si, void *uc);
 void    XAPP__ShowStartMsg( XAPP_t * const me);
+int     XAPP__Ctor(XAPP_t * const me, int argc, char *argv[]);
+int     XAPP__GetOpt(XAPP_t * const me, int argc, char *argv[]);
+int     XAPP__CreateIcmpHeader(XAPP_t * const me);
+int     XAPP__CreateIcmpPacket(XAPP_t * const me, XPROTO_ICMP__eType_t msgType);
+int     XAPP__TxPacket(XAPP_t * const me); 
+int     XAPP__RxPacket(XAPP_t * const me);
+void    XAPP__Destroy(XAPP_t * const me);
+int     XAPP__ValidateRxPkt(XAPP_t * const me);
+void    XAPP__GetTimeOfStart(XAPP_t * const me);
+void    XAPP__GetTimeOfEnd(XAPP_t * const me);
+void    XAPP__StatsComputeRtt(XAPP_t * const me);
+void    XAPP__StatsUpdate(XAPP_t * const me);
+void    XAPP__StatsShowRtt(XAPP_t * const me);
+void    XAPP__StatsShowSummary(XAPP_t * const me);
+void    XAPP__StatsComputeSummary(XAPP_t * const me);
+void    XAPP__StatsComputeRttAvg(XAPP_t * const me);
+void    XAPP__StatsComputeRttStDev(XAPP_t * const me);
+void    XAPP__Wait(XAPP_t * const me);
+void    XAPP__SigHandler(int sig, siginfo_t *si, void *uc);
+void    XAPP__ShowStartMsg(XAPP_t * const me);
+int     XAPP__IsRxAddrValid(XAPP_t * const me);
 
 #endif /* XAPP_H */
 /*>
- * verify the address on rxPacket
- * verify the sequence on rxPacket
- * verify the message type
  * manage error state
  * set root privilege
  * set the proper load data according to iputeils ref.
- + --- update packet being sent with sequence number
- + --- seq should start from 0
  *
+ * [ x ] - verify the address on rxPacket
+ * [ x ] - update packet being sent with sequence number
+ * [ x ] - seq should start from 0
+ * [ x ] - verify the message type
  * [ x ] - handle verbose flag and usage flag
  * [ x ] - parse user input to option.
  * [ x ] - add timer to time sent packet; wake up thread with sig alarm 

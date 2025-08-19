@@ -94,7 +94,7 @@ define LIB_MAKE
 	@cd $(1); make > $(VAR_TRASH); cp $(2) $(DIR_PROJECT);
 endef
 define MAKE_EXE
-	$(1) ./$(NAME) $(ARGS)  -v 142.250.181.238 
+	$(1) ./$(NAME) $(ARGS)  -v www.gooooogle.com 
 endef
 
 

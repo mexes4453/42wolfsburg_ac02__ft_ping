@@ -210,7 +210,7 @@ labelExit:
 
 
 
-int     XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr, int argc, char *argv[])
+int     XAPP__Ctor(XAPP_t * const me, int argc, char *argv[])
 {
     int retCode = 0;
     memset( (void *)me, 0, sizeof(XAPP_t));
@@ -226,7 +226,7 @@ int     XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr, int argc, ch
     /* Establish handler for signal (SIGINT & SIGALRM) */
     me->timerEvt.sigev_signo = SIGALRM;
     me->timerEvt.sigev_notify = SIGEV_SIGNAL;
-    me->timerEvt.sigev_value.sival_ptr= &(me->timerId);
+    //me->timerEvt.sigev_value.sival_ptr= &(me->timerId);
     
     me->sa.sa_flags = SA_SIGINFO;
     me->sa.sa_sigaction = XAPP__SigHandler;
@@ -241,7 +241,7 @@ int     XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr, int argc, ch
     XNET__InitAddrInfo(&(me->hints), AF_INET, SOCK_RAW, IPPROTO_ICMP, AI_CANONNAME);
 
     /* setup and fetch addr info */
-    retCode = getaddrinfo(strIpAddr, NULL, &(me->hints), &(me->pAddrInfo));
+    retCode = getaddrinfo(me->option.pOptHostAddr, NULL, &(me->hints), &(me->pAddrInfo));
     if (retCode != 0)
     {
         fprintf(stderr, "%s\n", gai_strerror(retCode));
@@ -253,6 +253,16 @@ int     XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr, int argc, ch
         XNET__ShowAddrInfo(me->pAddrInfo);
 #endif
     }
+    /* get address name info as numeric (234.232.123.31) */
+    
+    retCode = getnameinfo(me->pAddrInfo->ai_addr, me->pAddrInfo->ai_addrlen,
+                    me->txAddrBuf, XAPP__BUFSZ_ADDR,
+                    NULL, 0,
+                    NI_NUMERICHOST);
+    XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == EXIT_SUCCESS), 
+                                    &retCode,
+                                    XAPP__enRetCode_Ctor_SysCallgetnameInfoFailed,
+                                    labelExit);
 
     /* Set the process id to server as all packet id */
     me->pid = getpid() & 0xFFFF;
@@ -279,12 +289,13 @@ int     XAPP__Ctor(XAPP_t * const me, char const * const strIpAddr, int argc, ch
     
 
     /* Create timer */
+#if 0 /* clean up */
     me->timerVal.it_value.tv_sec = XAPP__POLL_BLOCK_DURATION; /* 1 Second */
     me->timerVal.it_value.tv_nsec = 0; /* 1 Second */
     me->timerVal.it_interval.tv_sec = 0; /* 1 Second */
     me->timerVal.it_interval.tv_nsec = 0; /* 1 Second */
     timer_create(CLOCK_MONOTONIC, &(me->timerEvt), &(me->timerId));
-
+#endif /* clean up */
 labelExit:
     return (retCode);
 }
@@ -306,34 +317,6 @@ int  XAPP__CreateIcmpHeader(XAPP_t * const me)
 labelExit:
     return (retCode);
 }
-
-
-
-#if 0
-int  XAPP__CreateIcmpPayload(XAPP_t * const me)
-{
-    int retCode = XAPP__enRetCode_CreateIcmpPayload_Failed;
-
-    me->payloadLen = XAPP__DEF_ICMP_DATA_SIZE;
-    me->pucPayload = (char unsigned *)malloc(me->payloadLen);
-    XNET_UTILS__ASSERT_UPD_REDIRECT((me->pucPayload), 
-                                    &retCode,
-                                    XAPP__enRetCode_CreateIcmpHdr_MallocFailed,
-                                    labelExit);
-
-    /*> Initialise payload array by setting all bytes to zero */
-    memset((void *)(me->pucPayload), 0, me->payloadLen);
-
-    retCode = EXIT_SUCCESS;
-labelExit:
-    return (retCode);
-
-}
-
-#endif
-
-
-
 
 
 
@@ -369,7 +352,7 @@ labelExit:
 void    XAPP__ShowStartMsg(XAPP_t * const me)
 {
     printf(XAPP__INFO_PING_START, me->pAddrInfo->ai_canonname,
-                                  me->pAddrInfo->ai_canonname,
+                                  me->txAddrBuf,
                                   XAPP__DEF_ICMP_DATA_SIZE);
     if (me->option.optVerbose)
     {
@@ -395,7 +378,11 @@ int XAPP__TxPacket(XAPP_t * const me)
     }
     else if (me->pktCntTx > 0)
     {
-        /* reuse existing packet header */
+        /*>
+         * reuse existing packet header 
+         * - update the sequence number and recompute the checksum value */
+        me->pIcmpHdrTx->seqnbr = me->seqNbr;
+        ICMP_ECHO__CalcCheckSum(me->pIcmpHdrTx);
     }
 
 
@@ -589,13 +576,10 @@ void    XAPP__StatsComputeRtt(XAPP_t * const me)
 
     } /* RETURN */
 
-    /* */
-    //memset((void *)pRttRec, 0, sizeof(XAPP__statsRttRecord_t));
 
     /* transpose data */
     pRttRec->sec = XTIMER__ConvertTsToSec(&(me->stats.tDuration));
     XAPP__StatsUpdate(me);
-    XAPP__StatsShowRtt(me);
 }
 
 
@@ -783,13 +767,13 @@ void XAPP__StatsShowRtt(XAPP_t * const me)
      * ex. 1.0384234992 seconds
      * Therefore, simply multiply by 1000 to convert to ms */
     printf(XAPP__MSG_FMT_RTT1, me->pIcmpHdrRx->totalPacketLen, 
-                               me->pAddrInfo->ai_canonname);
+                               me->rxAddrBuf);
 
     snprintf(me->strText, XAPP__BUFSZ_TXTSTR,
                           XAPP__MSG_FMT_RTT2,
-                          me->seqNbr,
+                          ntohs(me->pIcmpHdrRx->seqnbr),
                           me->pIpHdr->ttl,
-                          me->stats.pRttRec->sec * 1000);
+                          me->stats.pRttRec->sec * XTIMER__SECOND_TO_MS);
     /* print information stored in string variable to terminal */
     /* replace all '.' to comma ',' */
     XAPP__StrFindReplace(me->strText, '.', ',');
@@ -799,9 +783,43 @@ void XAPP__StatsShowRtt(XAPP_t * const me)
 
 
 
+
+int  XAPP__IsRxAddrValid(XAPP_t * const me)
+{
+    int retCode = XAPP__enRetCode_IsRxAddrValid_Init;
+
+    retCode = getnameinfo((struct sockaddr *)&(me->dstAddr), me->dstAddrLen,
+                          me->rxAddrBuf, XAPP__BUFSZ_ADDR,
+                          NULL, 0,
+                          NI_NUMERICHOST);
+    XNET_UTILS__ASSERT_UPD_REDIRECT( (retCode == EXIT_SUCCESS),
+                                     &retCode,
+                                     XAPP__enRetCode_IsRxAddrValid_AddrResFailed,
+                                     labelExit);
+                                     
+    retCode = strcmp(me->rxAddrBuf, me->txAddrBuf);
+    XNET_UTILS__ASSERT_UPD_REDIRECT( (retCode == EXIT_SUCCESS),
+                                     &retCode,
+                                     XAPP__enRetCode_IsRxAddrValid_InvalidRecvAddr,
+                                     labelExit);
+    retCode = EXIT_SUCCESS;
+labelExit:
+    return (retCode);
+}
+
+
+
+
 int     XAPP__ValidateRxPkt(XAPP_t * const me)
 {
     int retCode = EXIT_FAILURE;
+
+    /* Validate the ip address is same */
+    retCode = XAPP__IsRxAddrValid(me);
+    XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == EXIT_SUCCESS), 
+           &retCode, 
+           XAPP__enRetCode_ValidateRxPkt_IsRxAddrValidFailed,
+           labelExit);
 
     /*> First: validate that internet frame is valid - delete old frame */
     if (me->pIpHdr)
@@ -891,6 +909,9 @@ void    XAPP__Wait(XAPP_t * const me)
         memset((void *)&(me->stats.tStart), 0, sizeof(XTIMER__timespec_t));
     }
 }
+
+
+
 
 
 
