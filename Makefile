@@ -48,8 +48,8 @@ USR_LIB_XDIR=libxdir.a
 
 # FLAGS
 CFLAGS = -Werror -Wall -Wextra \
-		 #-lrt \
-		 #-lm \
+		 -lrt \
+		 -lm \
 		 #-DXAPP__DEBUG \
 		 #-DICMP_ECHO__DEBUG \
 		 #-DXNET__DEBUG \

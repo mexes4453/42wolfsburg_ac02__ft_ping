@@ -18,6 +18,7 @@ int XAPP__HandleUserInput( XAPP_t *me, int argc, char *argv[])
     char *str = NULL;
 
 
+
     printf("Prog: %s\n", argv[0]);
     if (argc > 1)
     {
@@ -41,7 +42,8 @@ int XAPP__HandleUserInput( XAPP_t *me, int argc, char *argv[])
             else
             {
                 /* process ip address */
-                printf("==> adr: \n");
+                me->strIpAddr = str;
+                printf("==> adr: %s\n", me->strIpAddr);
             }
 
             /* Evaluate return Code */
@@ -210,10 +212,14 @@ labelExit:
 
 
 
-int     XAPP__Ctor(XAPP_t * const me, int argc, char *argv[])
+//int     XAPP__Ctor(XAPP_t * const me, int argc, char *argv[])
+int     XAPP__Ctor( XAPP_t * const me, char const * const strIpAddr, int argc, char *argv[])
 {
     int retCode = 0;
     memset( (void *)me, 0, sizeof(XAPP_t));
+
+    /* clean up : only trick the compiler */
+    if (strIpAddr){}
 
     /* Initialise the parser */
     retCode = XAPP__HandleUserInput(me, argc, argv);

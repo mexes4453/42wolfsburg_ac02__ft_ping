@@ -10,6 +10,7 @@
 # include "../inc/xproto_ip.h"
 # include "../inc/xproto_icmp.h"
 # include "../inc/icmp_echo.h"
+# include "../inc/xparser.h"
 
 #define XAPP__ADDR_DST  "142.250.181.238"   ///< Google.com ip addr
 #define XAPP__ADDR_NAME  "www.google.com"   ///< Google.com ip addr
@@ -162,7 +163,6 @@ void    XAPP__StatsComputeRttStDev( XAPP_t * const me);
 void    XAPP__Wait( XAPP_t * const me);
 void    XAPP__SigHandler( int sig, siginfo_t *si, void *uc);
 void    XAPP__ShowStartMsg( XAPP_t * const me);
-int     XAPP__Ctor(XAPP_t * const me, int argc, char *argv[]);
 int     XAPP__GetOpt(XAPP_t * const me, int argc, char *argv[]);
 int     XAPP__CreateIcmpHeader(XAPP_t * const me);
 int     XAPP__CreateIcmpPacket(XAPP_t * const me, XPROTO_ICMP__eType_t msgType);
@@ -189,7 +189,10 @@ int     XAPP__IsRxAddrValid(XAPP_t * const me);
  * manage error state
  * set root privilege
  * set the proper load data according to iputeils ref.
- *
+ * remove ppoll
+ * use recvfrom, sendto
+ * use gettimeofday
+ * test user option, args, and input
  * [ x ] - verify the address on rxPacket
  * [ x ] - update packet being sent with sequence number
  * [ x ] - seq should start from 0
