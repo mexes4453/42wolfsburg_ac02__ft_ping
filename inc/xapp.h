@@ -38,6 +38,10 @@
                                     \n    --ttl=N          specify N as time-to-live \
                                     \n"
 
+# define XAPP__ERR_MSG_USAGE              "Try 'ft_ping --help' or 'ft_ping --usage' for more information."
+# define XAPP__ERR_MSG_OPT_COUNT_REQ_ARGS "option requires an argument -- 'c'\n" XAPP__ERR_MSG_USAGE
+# define XAPP__ERR_MSG_OPT_INVALID        "invalid option --" 
+
 #ifdef XAPP__DEBUG
 # define XAPP_D_VALIDATE_RX_PKT "\n[ XAPP::VALIDATE_RX_PKT ]"
 #endif
@@ -46,6 +50,7 @@ typedef enum XAPP__retCode_e
     XAPP__enRetCode_Ctor_CreateSockFailed = -355,
     XAPP__enRetCode_GetOpt_Init,
     XAPP__enRetCode_Ctor_GetOptFailed,
+    XAPP__enRetCode_Connect_Failed,
     XAPP__enRetCode_Ctor_SysCallgetnameInfoFailed,
     XAPP__enRetCode_CreateIcmpHdr_Failed,
     XAPP__enRetCode_CreateIcmpHdr_MallocFailed,
@@ -61,7 +66,16 @@ typedef enum XAPP__retCode_e
     XAPP__enRetCode_TxPacket_SendToFailed,
     XAPP__enRetCode_IsRxAddrValid_Init,
     XAPP__enRetCode_IsRxAddrValid_AddrResFailed,
-    XAPP__enRetCode_IsRxAddrValid_InvalidRecvAddr
+    XAPP__enRetCode_IsRxAddrValid_InvalidRecvAddr,
+    XAPP__enRetCode_HandleUserInput_Init,
+    XAPP__enRetCode_HandleUserInput_InvalidOptionFormat,
+    XAPP__enRetCode_ProcessOptionChar_Init,
+    XAPP__enRetCode_ProcessOptionChar_OptUsageHandled,
+    XAPP__enRetCode_ProcessOptionChar_InvalidOptFormatCount,
+    XAPP__enRetCode_ProcessOptionChar_NoOptVal,
+    XAPP__enRetCode_ProcessOptionChar_InvalidOption,
+    XAPP__enRetCode_Max
+
 }   XAPP__retCode_t;
 
 
@@ -143,10 +157,12 @@ typedef struct XAPP_s
 
 
 XAPP_t *XAPP__GetInstance(void);
-int     XAPP__Ctor(XAPP_t * const me, int argc, char *argv[]);
+void    XAPP__Ctor( XAPP_t * const me);
+void    XAPP__Init( XAPP_t * const me);
 int     XAPP__HandleOpt( XAPP_t * const me, char *strOpt, char *argv[], int *pArgIdx);
 int     XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx);
 int     XAPP__HandleUserInput( XAPP_t * const me, int argc, char *argv[]);
+int     XAPP__Connect( XAPP_t * const me);
 int     XAPP__CreateIcmpHeader( XAPP_t * const me);
 int     XAPP__CreateIcmpPacket( XAPP_t * const me, XPROTO_ICMP__eType_t msgType);
 int     XAPP__TxPacket( XAPP_t * const me); 
@@ -165,10 +181,12 @@ void    XAPP__StatsComputeRttStDev( XAPP_t * const me);
 void    XAPP__Wait( XAPP_t * const me);
 void    XAPP__SigHandler( int sig, siginfo_t *si, void *uc);
 void    XAPP__ShowStartMsg( XAPP_t * const me);
-int     XAPP__GetOpt(XAPP_t * const me, int argc, char *argv[]); /* clean up */
 int     XAPP__CreateIcmpHeader(XAPP_t * const me);
 int     XAPP__CreateIcmpPacket(XAPP_t * const me, XPROTO_ICMP__eType_t msgType);
 int     XAPP__IsRxAddrValid(XAPP_t * const me);
+
+
+
 
 #endif /* XAPP_H */
 /*>

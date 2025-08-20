@@ -9,9 +9,19 @@ int main(int argc, char *argv[])
 
     /* Initialise the variables */
     pAppVar = XAPP__GetInstance();
-    retCode = XAPP__Ctor(pAppVar, NULL, argc, argv); /* clean up : remove full from function and prototype */
-    //XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == 0), &retCode, retCode, labelExit);
-    XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == 0), &retCode, retCode, labelCleanup);
+    XAPP__Ctor(pAppVar); 
+    XAPP__Init(pAppVar);
+
+    /* Initialise the parser */
+    retCode = XAPP__HandleUserInput(pAppVar, argc, argv);
+    XNET_UTILS__ASSERT_UPD_REDIRECT((retCode ==  EXIT_SUCCESS), 
+                                    &retCode,
+                                    retCode,
+                                    labelExit);
+    
+    retCode = XAPP__Connect(pAppVar);
+    XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == 0), &retCode, retCode, labelExit);
+
 
     XAPP__ShowStartMsg(pAppVar);
 
@@ -73,7 +83,7 @@ labelExit:
     {
         XAPP__StatsShowSummary(pAppVar);
     }
-labelCleanup: /* clean up */
+//labelCleanup: /* clean up */
     XAPP__Destroy(pAppVar);
     return (retCode);
 }

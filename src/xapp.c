@@ -14,20 +14,18 @@ XAPP_t *XAPP__GetInstance(void)
 int XAPP__HandleUserInput( XAPP_t *me, int argc, char *argv[])
 {
     int  argIdx;
-    int  retCode = 0;
+    int  retCode = XAPP__enRetCode_HandleUserInput_Init;
     char *str = NULL;
 
+#ifdef XAPP__DEBUG_HANDLE_USER_INPUT /*============================= */
     printf("Prog: %s\n", argv[0]);
+#endif /* XAPP__DEBUG_HANDLE_USER_INPUT ---------------------------- */
     if (argc > 1)
     {
         argIdx = 1;
         while (argIdx < argc)
         {
-            /* stripwhitespace around string - leading and trailing */
             XPARSER__StripWhiteSpace( argv[ argIdx ], &str);
-#ifdef XAPP__DEBUG_HANDLE_USER_INPUT /*============================= */
-            //printf("args(%s)\n", str);
-#endif /* XAPP__DEBUG_HANDLE_USER_INPUT ---------------------------- */
 
             /* Check type of argument (option or ip addres ) */
             if ( str[0] == '-')
@@ -54,60 +52,14 @@ int XAPP__HandleUserInput( XAPP_t *me, int argc, char *argv[])
         }
     }
 labelExit:
-    retCode = -1; /* for testing purpose only */
     return (retCode);
 }
-
-
-
-#if 0 /* NOT_USED */
-int     XAPP__GetOpt(XAPP_t * const me, int argc, char *argv[])
-{
-    int retCode = XAPP__enRetCode_GetOpt_Init;
-    int idxArgc = 1;                /* program name is idx 0 */
-
-    while ( idxArgc < argc )
-    {
-        if ( strcmp(argv[ idxArgc ], "-v") == 0)
-        {
-            me->option.optVerbose = 1;
-            printf("verbose( %d )\n", me->option.optVerbose);
-        }
-        else if ( strcmp(argv[ idxArgc ], "-?") == 0)
-        {
-            me->option.optUsage = 1;
-            printf("usage( %d )\n", me->option.optUsage);
-        }
-        else if ( strcmp(argv[ idxArgc ], "-c") == 0)
-        {
-            idxArgc += 1;
-            me->option.optPktCnt = atoi(argv[idxArgc]);
-            printf("count( %ld )\n", me->option.optPktCnt);
-        }
-        else if ( strcmp(argv[ idxArgc ], "-ttl") == 0)
-        {
-            idxArgc += 1;
-            me->option.optTimeToLive = atoi(argv[idxArgc]);
-            printf("ttl( %ld )\n", me->option.optTimeToLive);
-        }
-        else
-        {
-            me->option.pOptHostAddr = argv[idxArgc];
-            printf("addr( %s )\n", me->option.pOptHostAddr);
-        }
-        ++idxArgc;
-    }
-    retCode = EXIT_SUCCESS;
-    return (retCode);
-}
-#endif /* NOT_USED */
-
 
 
 
 int XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx)
 {
-    int  retCode = 0;
+    int  retCode = XAPP__enRetCode_ProcessOptionChar_Init;
     char chr = *pChr;
     int  cntValue = 0;
 
@@ -116,36 +68,32 @@ int XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *p
     {
         case 'v':
             {
-                //printf("setting verbose flag\n");
                 me->option.optVerbose = 1;
-                retCode = 0;
+                retCode = EXIT_SUCCESS;
                 break ;
             }
         case '?':
             {
-                printf("%s", XAPP__MSG_FMT_HELP);
-                retCode = -501;
+                //printf("%s", XAPP__MSG_FMT_HELP);
+                retCode = XAPP__enRetCode_ProcessOptionChar_OptUsageHandled;
                 break ;
             }
         case 'c':
             {
                 if ( *(pChr + 1) != '\0' )
                 {
-                    printf("Invalid option format for (c)\n");
-                    retCode = -502;
+                    retCode = XAPP__enRetCode_ProcessOptionChar_InvalidOptFormatCount;
                     goto labelExit;
                 }
                 /* increment argument index to where count value is expected */ 
                 *pArgIdx += 1;
                 if ( argv[ (*pArgIdx) ] == NULL )
                 {
-                    printf("Missing value for option (c)\n");
-                    retCode = -503;
+                    retCode = XAPP__enRetCode_ProcessOptionChar_NoOptVal;
                     goto labelExit;
                 }
                 /*>
-                printf("Retrieve count value string from next argv[ idx ] and conv to int\n");
-                */
+                 * Retrieve count value string from next argv[ idx ] and conv to int */
                 cntValue = atoi( argv[ *pArgIdx ] );
                 me->option.optPktCnt = cntValue;
 
@@ -159,10 +107,19 @@ int XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *p
                 retCode = 0;
                 break ;
             }
+        case '-':
+        {
+            /* Do nothing */
+            retCode = 0;
+            break ; 
+        }
         default:
         {
-            printf("Unknown option\n");
-            retCode = 506;
+            fprintf(stderr, "%s: %s '%c'\n%s",  argv[0], 
+                                                XAPP__ERR_MSG_OPT_INVALID,
+                                               *pChr,
+                                                XAPP__ERR_MSG_USAGE);
+            retCode = XAPP__enRetCode_ProcessOptionChar_InvalidOption;
             break ;
         }
     }
@@ -180,7 +137,7 @@ int XAPP__HandleOpt(XAPP_t * const me, char *strOpt, char *argv[], int *pArgIdx)
     /* check for any whitespace in option str */
     if (XPARSER__IsWhiteSpaceInStr(strOpt) || (strlen(strOpt) <= 1)) 
     {
-        retCode = -500; /* invalid option format */
+        retCode = XAPP__enRetCode_HandleUserInput_InvalidOptionFormat;
         goto labelExit;
     }
 
@@ -204,19 +161,14 @@ labelExit:
 
 
 
-int     XAPP__Ctor(XAPP_t * const me, int argc, char *argv[])
+void     XAPP__Ctor(XAPP_t * const me)
 {
-    int retCode = 0;
     memset( (void *)me, 0, sizeof(XAPP_t));
+}
 
 
-    /* Initialise the parser */
-    retCode = XAPP__HandleUserInput(me, argc, argv);
-    XNET_UTILS__ASSERT_UPD_REDIRECT((retCode ==  EXIT_SUCCESS), 
-                                    &retCode,
-                                    XAPP__enRetCode_Ctor_GetOptFailed,
-                                    labelExit);
-
+void  XAPP__Init(XAPP_t * const me)
+{
     /* Initialise the sig action and event */
     /* Establish handler for signal (SIGINT & SIGALRM) */
     me->timerEvt.sigev_signo = SIGALRM;
@@ -225,11 +177,33 @@ int     XAPP__Ctor(XAPP_t * const me, int argc, char *argv[])
     
     me->sa.sa_flags = SA_SIGINFO;
     me->sa.sa_sigaction = XAPP__SigHandler;
+
     sigemptyset(&(me->sa.sa_mask));
     sigaction(SIGALRM, &(me->sa), NULL);
     sigaction(SIGINT, &(me->sa), NULL);
 
 
+    /* Set the process id to server as all packet id */
+    me->pid = getpid() & 0xFFFF;
+
+    /* Create timer */
+#if 0 /* clean up */
+    me->timerVal.it_value.tv_sec = XAPP__POLL_BLOCK_DURATION; /* 1 Second */
+    me->timerVal.it_value.tv_nsec = 0; /* 1 Second */
+    me->timerVal.it_interval.tv_sec = 0; /* 1 Second */
+    me->timerVal.it_interval.tv_nsec = 0; /* 1 Second */
+    timer_create(CLOCK_MONOTONIC, &(me->timerEvt), &(me->timerId));
+#endif /* clean up */
+}
+
+
+
+
+
+
+int     XAPP__Connect( XAPP_t * const me)
+{
+    int retCode = XAPP__enRetCode_Connect_Failed;
     me->dstAddrLen = sizeof(struct sockaddr_in);
 
     /* Initialise hints attribute */
@@ -258,11 +232,6 @@ int     XAPP__Ctor(XAPP_t * const me, int argc, char *argv[])
                                     &retCode,
                                     XAPP__enRetCode_Ctor_SysCallgetnameInfoFailed,
                                     labelExit);
-
-    /* Set the process id to server as all packet id */
-    me->pid = getpid() & 0xFFFF;
-
-    
     /* create socket */
     me->sockfd = XNET__CreateSocket(me->pAddrInfo);
     XNET_UTILS__ASSERT_UPD_REDIRECT((me->sockfd), 
@@ -281,22 +250,11 @@ int     XAPP__Ctor(XAPP_t * const me, int argc, char *argv[])
     me->fds->fd = me->sockfd;
     me->fds->events = POLLIN;
     me->stats.tPoll.tv_sec = XAPP__POLL_BLOCK_DURATION; 
-    
 
-    /* Create timer */
-#if 0 /* clean up */
-    me->timerVal.it_value.tv_sec = XAPP__POLL_BLOCK_DURATION; /* 1 Second */
-    me->timerVal.it_value.tv_nsec = 0; /* 1 Second */
-    me->timerVal.it_interval.tv_sec = 0; /* 1 Second */
-    me->timerVal.it_interval.tv_nsec = 0; /* 1 Second */
-    timer_create(CLOCK_MONOTONIC, &(me->timerEvt), &(me->timerId));
-#endif /* clean up */
 labelExit:
     return (retCode);
+
 }
-
-
-
 
 int  XAPP__CreateIcmpHeader(XAPP_t * const me)
 {

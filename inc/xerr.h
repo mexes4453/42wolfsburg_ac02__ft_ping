@@ -1,13 +1,13 @@
 
 #ifndef XERR_H
-#define XERR_H
+# define XERR_H
 
-#include "xapp.h"
-#include <errno.h>
+# include "xapp.h"
+# include <errno.h>
+# define XERR__NIL ""
 
 typedef struct XERR_s
 {
-    int   id;
     int   code;
     char *strMsg;
 } XERR_t;
