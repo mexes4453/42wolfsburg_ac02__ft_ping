@@ -25,9 +25,9 @@ int XAPP__HandleUserInput( XAPP_t *me, int argc, char *argv[])
         {
             /* stripwhitespace around string - leading and trailing */
             XPARSER__StripWhiteSpace( argv[ argIdx ], &str);
-#ifdef XAPP__DEBUG_HANDLE_USER_INPUT
+#ifdef XAPP__DEBUG_HANDLE_USER_INPUT /*============================= */
             //printf("args(%s)\n", str);
-#endif /* XAPP__DEBUG_HANDLE_USER_INPUT */
+#endif /* XAPP__DEBUG_HANDLE_USER_INPUT ---------------------------- */
 
             /* Check type of argument (option or ip addres ) */
             if ( str[0] == '-')
@@ -38,9 +38,9 @@ int XAPP__HandleUserInput( XAPP_t *me, int argc, char *argv[])
             else
             {
                 /* process ip address */
-                me->strIpAddr = str;
+                me->option.pOptHostAddr = str;
 #ifdef XAPP__DEBUG_HANDLE_USER_INPUT /*============================= */
-                printf("==> adr: %s\n", me->strIpAddr);
+                printf("==> adr: %s\n", me->option.pOptHostAddr);
 #endif /* XAPP__DEBUG_HANDLE_USER_INPUT ---------------------------- */
             }
 
@@ -204,23 +204,11 @@ labelExit:
 
 
 
-
-
-
-
-
-
-
-
-
-//int     XAPP__Ctor(XAPP_t * const me, int argc, char *argv[])
-int     XAPP__Ctor( XAPP_t * const me, char const * const strIpAddr, int argc, char *argv[])
+int     XAPP__Ctor(XAPP_t * const me, int argc, char *argv[])
 {
     int retCode = 0;
     memset( (void *)me, 0, sizeof(XAPP_t));
 
-    /* clean up : only trick the compiler */
-    if (strIpAddr){}
 
     /* Initialise the parser */
     retCode = XAPP__HandleUserInput(me, argc, argv);
@@ -260,8 +248,8 @@ int     XAPP__Ctor( XAPP_t * const me, char const * const strIpAddr, int argc, c
         XNET__ShowAddrInfo(me->pAddrInfo);
 #endif
     }
+
     /* get address name info as numeric (234.232.123.31) */
-    
     retCode = getnameinfo(me->pAddrInfo->ai_addr, me->pAddrInfo->ai_addrlen,
                     me->txAddrBuf, XAPP__BUFSZ_ADDR,
                     NULL, 0,
@@ -437,12 +425,14 @@ labelExit:
 int  XAPP__RxPacket(XAPP_t * const me) 
 {
     int retCode = XAPP__enRetCode_RxPacket_Init;
+
     /* receive the response back */
-    me->datalenRx  = recvfrom(me->sockfd, me->recvBuf, 
-                                      XAPP__RX_BUFSZ, 
-                                      0, 
-                                      (struct sockaddr *)(&(me->dstAddr)),
-                                      &(me->dstAddrLen) );
+    me->datalenRx  = recvfrom(me->sockfd,
+                              me->recvBuf, 
+                              XAPP__RX_BUFSZ, 
+                              0, 
+                              (struct sockaddr *)(&(me->dstAddr)),
+                              &(me->dstAddrLen) );
     if (me->datalenRx  <= 0)
     {
         printf("recv error\n");
@@ -451,10 +441,10 @@ int  XAPP__RxPacket(XAPP_t * const me)
     else
     {
         // validate the received packet
-#ifdef XNET__DEBUG
+#ifdef XNET__DEBUG /* ====================================================== */
         printf("success: recv (%ld)\n", me->datalenRx );
         XNET_UTILS__ShowPacketHex(me->recvBuf, me->datalenRx );
-#endif
+#endif /* XNET__DEBUG ------------------------------------------------------ */
         retCode = EXIT_SUCCESS;
     }
     return (retCode);

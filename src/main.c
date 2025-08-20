@@ -13,7 +13,6 @@ int main(int argc, char *argv[])
     //XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == 0), &retCode, retCode, labelExit);
     XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == 0), &retCode, retCode, labelCleanup);
 
-
     XAPP__ShowStartMsg(pAppVar);
 
     while (XAPP__TRUE)

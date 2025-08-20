@@ -33,9 +33,9 @@
                                     \n\nOptions valid for all request types: \
                                     \n-?, --help           give this help list \
                                     \n    --usage          give a short usage message \
+                                    \n-c, --count=NUMBER   stop after sending NUMBER packets \
                                     \n-v,                  verbose output \
                                     \n    --ttl=N          specify N as time-to-live \
-                                    \n-c, --count=NUMBER   stop after sending NUMBER packets \
                                     \n"
 
 #ifdef XAPP__DEBUG
@@ -103,12 +103,12 @@ typedef struct XAPP__opt_s
 
 
 
+
 typedef struct XAPP_s
 {
     struct addrinfo    hints;
     struct addrinfo   *pAddrInfo;
-    char              *strIpAddr;
-    XAPP__opt_t        option;          ; /* parser to parse user input */
+    XAPP__opt_t        option;          /* parser to parse user input */
     /* ttl */
     ssize_t             pktCntTx;
     ssize_t             pktCntRx;
@@ -143,7 +143,7 @@ typedef struct XAPP_s
 
 
 XAPP_t *XAPP__GetInstance(void);
-int     XAPP__Ctor( XAPP_t * const me, char const * const strIpAddr, int argc, char *argv[]);
+int     XAPP__Ctor(XAPP_t * const me, int argc, char *argv[]);
 int     XAPP__HandleOpt( XAPP_t * const me, char *strOpt, char *argv[], int *pArgIdx);
 int     XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx);
 int     XAPP__HandleUserInput( XAPP_t * const me, int argc, char *argv[]);
@@ -165,7 +165,7 @@ void    XAPP__StatsComputeRttStDev( XAPP_t * const me);
 void    XAPP__Wait( XAPP_t * const me);
 void    XAPP__SigHandler( int sig, siginfo_t *si, void *uc);
 void    XAPP__ShowStartMsg( XAPP_t * const me);
-int     XAPP__GetOpt(XAPP_t * const me, int argc, char *argv[]);
+int     XAPP__GetOpt(XAPP_t * const me, int argc, char *argv[]); /* clean up */
 int     XAPP__CreateIcmpHeader(XAPP_t * const me);
 int     XAPP__CreateIcmpPacket(XAPP_t * const me, XPROTO_ICMP__eType_t msgType);
 int     XAPP__IsRxAddrValid(XAPP_t * const me);
@@ -180,6 +180,7 @@ int     XAPP__IsRxAddrValid(XAPP_t * const me);
  * use gettimeofday
  * replace all <string> function with that of libft
  * test user option, args, and input
+ * perform clean up; NOT_USED 
  * [ x ] - verify the address on rxPacket
  * [ x ] - update packet being sent with sequence number
  * [ x ] - seq should start from 0
