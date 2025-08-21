@@ -2,10 +2,9 @@
 
 static const XERR_t XERR__ErrTable[] =
     {
-        {XAPP__enRetCode_TxPacket_SendToFailed, "sending packet"},
-        {XAPP__enRetCode_RxPacket_Failed, "receiving packet"},
+        {XAPP__enRetCode_TxPacket_SendToFailed, "TxPacket->SendTo Failed"},
+        {XAPP__enRetCode_RxPacket_Failed, "RxPacket Failed"},
         {XAPP__enRetCode_ProcessOptionChar_InvalidOptFormatCount, "Invalid option format for (c)"},
-        {XAPP__enRetCode_ProcessOptionChar_OptUsageHandled, XAPP__MSG_FMT_HELP},
         {XAPP__enRetCode_ProcessOptionChar_NoOptVal,        XAPP__ERR_MSG_OPT_COUNT_REQ_ARGS},
         {XAPP__enRetCode_ProcessOptionChar_CountValInvalid, XAPP__ERR_MSG_OPT_COUNT_VAL_INV},
         {XAPP__enRetCode_CreateIcmpPayload_Failed,          XERR__NIL},
@@ -21,36 +20,33 @@ void XERR__HandleError(int retCode, char *progTitle)
     XERR_t *pErr = NULL;
 
     if (retCode == EXIT_SUCCESS) return;
+    
     while (XERR__ErrTable[idx].strMsg != NULL)
     {
-        //printf("found rc( %d ) - %d\n", retCode, XERR__ErrTable[idx].code);
         if (retCode == XERR__ErrTable[idx].code)
         {
             pErr = (XERR_t *)&(XERR__ErrTable[idx]);
-            //printf("found");
             break;
         }
         idx++;
     }
 
-    fprintf(stderr, "%s: ", progTitle);
-    if (errno)
+    if (errno || pErr)
     {
-       if (pErr)
-       {
-           perror(pErr->strMsg);
-       }
-       else
-       {
-           perror("error");
-           fprintf(stderr, "%d\n", retCode);
-       }
+        fprintf(stderr, "%s: ", progTitle);
     }
-    else
+
+    if (errno && pErr)
     {
-        if( pErr)
-        {
-           fprintf(stderr, "%s\n", pErr->strMsg);
-        }
+        fprintf(stderr, "error! ");
+        perror(pErr->strMsg);
+    }
+    else if (errno && (!pErr))
+    {
+        perror("error");
+    }
+    else if (pErr)
+    {
+        fprintf(stderr, "error! %s\n", pErr->strMsg);
     }
 }

@@ -28,19 +28,21 @@
 #define XAPP__MSG_FMT_STATS_TITLE  "--- %s ping statistics ---"
 #define XAPP__MSG_FMT_STATS        "\n %ld packets transmitted, %ld packets received, %d%c packet loss \
                                     \n round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms \n"
-#define XAPP__MSG_FMT_HELP         "Usage: ft__ping [OPTION...] HOST ... \
+# define XAPP__OPT_STR_USAGE       "usage"
+# define XAPP__OPT_STR_HELP        "help"
+# define XAPP__OPT_STR_TTL         "ttl"
+# define XAPP__MSG_FMT_HELP         "Usage: ft__ping [OPTION...] HOST ... \
                                     \nSend ICMP ECHO_REQUEST packets to network hosts. \
                                     \n\nOptions valid for all request types: \
                                     \n-?, --help           give this help list \
                                     \n    --usage          give a short usage message \
-                                    \n-c, --count=NUMBER   stop after sending NUMBER packets \
+                                    \n-c,                  stop after sending NUMBER packets \
                                     \n-v,                  verbose output \
                                     \n    --ttl=N          specify N as time-to-live \
                                     \n"
-# define XAPP__OPT_STR_USAGE "usage"
-# define XAPP__OPT_STR_HELP  "help"
-# define XAPP__OPT_STR_TTL   "ttl="
-# define XAPP__ERR_MSG_USAGE              "Try 'ft_ping --help' or 'ft_ping --usage' for more information."
+# define XAPP__MSG_FMT_USAGE        "Usage: ft__ping [-v?] [-c NUMBER] [--ttl=N] " \
+                                    "[--usage] [--help] HOST ...  \n"
+# define XAPP__ERR_MSG_USAGE              "Try 'ft_ping --help' or 'ft_ping --usage' for more information.\n"
 # define XAPP__ERR_MSG_OPT_COUNT_REQ_ARGS "option requires an argument -- 'c'\n" XAPP__ERR_MSG_USAGE
 # define XAPP__ERR_MSG_OPT_COUNT_VAL_INV  "invalid count value -- 'c'\n" XAPP__ERR_MSG_USAGE
 # define XAPP__ERR_MSG_OPT_INVALID        "invalid option --" 
@@ -50,7 +52,7 @@
 #endif
 typedef enum XAPP__retCode_e
 {
-    XAPP__enRetCode_Ctor_CreateSockFailed = -355,
+    XAPP__enRetCode_Ctor_CreateSockFailed = 101,
     XAPP__enRetCode_GetOpt_Init,
     XAPP__enRetCode_Ctor_GetOptFailed,
     XAPP__enRetCode_Connect_Failed,
@@ -78,6 +80,7 @@ typedef enum XAPP__retCode_e
     XAPP__enRetCode_ProcessOptionChar_NoOptVal,
     XAPP__enRetCode_ProcessOptionChar_InvalidOption,
     XAPP__enRetCode_ProcessOptionChar_CountValInvalid,
+    XAPP__enRetCode_ProcessOptionChar_OptUnknown,
     XAPP__enRetCode_Max
 
 }   XAPP__retCode_t;
@@ -164,6 +167,8 @@ XAPP_t *XAPP__GetInstance(void);
 void    XAPP__Ctor( XAPP_t * const me);
 void    XAPP__Init( XAPP_t * const me);
 int     XAPP__HandleOpt( XAPP_t * const me, char *strOpt, char *argv[], int *pArgIdx);
+void    XAPP__HandleOptionHelp(void);
+void    XAPP__HandleOptionUsage(void);
 int     XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx);
 int     XAPP__HandleUserInput( XAPP_t * const me, int argc, char *argv[]);
 int     XAPP__Connect( XAPP_t * const me);
@@ -200,8 +205,13 @@ int     XAPP__IsRxAddrValid(XAPP_t * const me);
  * remove ppoll
  * use recvfrom, sendto
  * use gettimeofday
- * [ x ] - replace all <string> function with that of libft
+ * replace switch with "if"
+ * [ + ] handle option : ttl
  * test user option, args, and input
+ * [ x ] - handle option : usage
+ * [ x ] - handle option : help
+ * [ x ] - replace all <string> function with that of libft
+ * [ X ] - remove print of error when applying options handled by error handler.
  * perform clean up; NOT_USED 
  * Ensure that the user input addr is used during ping display
  * [ x ] - verify the address on rxPacket
