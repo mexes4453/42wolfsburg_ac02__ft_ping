@@ -1,11 +1,11 @@
 #ifndef XPROTO_IP_H
 # define XPROTO_IP_H
 # include <sys/types.h>
-# include <string.h>
 # include <stdlib.h>
 # include <stdio.h>
 # include <arpa/inet.h>
 # include "../inc/xnet_utils.h"
+# include "../xlib/libft/libft.h"
 
 #define XPROTO_IP__HDR_MIN_LEN    (20)
 #define XPROTO_IP__MSG_FMT_HDR "\nver_ihl: %x \

@@ -1,7 +1,7 @@
 #ifndef XPARSER_H
 # define XPARSER_H
-# include <string.h>
 # include <stdlib.h>
+# include "../xlib/libft/libft.h"
 # define XPARSER__WHITESPACE_CHARS " \n\r\t\v"
 
 int XPARSER__StripLeadingWhiteSpace( char *strInput, char **strOutput);
@@ -20,7 +20,7 @@ int XPARSER__IsWhiteSpaceInStr( char *str);
  * @brief Check that all non-whitespace characters in a string are digit char
  *
  * @param s : input string
- * @return rcBool: 1 -> true:  all character are digit char
+ * @return rcBool: 1 -> true:  all character are digit characters.
  *                 0 -> false: otherwise
  * */
 int XPARSER__IsNbr( char *s );

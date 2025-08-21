@@ -4,7 +4,7 @@
 
 void XPROTO_IP__Ctor(XPROTO_IP_t * const me)
 {
-    memset((void *)me, 0, sizeof(XPROTO_IP_t));
+    ft_memset((void *)me, 0, sizeof(XPROTO_IP_t));
     me->ShowDetails = XPROTO_IP__ShowDetails;
     me->ParseFrom = XPROTO_IP__ParseFrom;
     me->Destroy = XPROTO_IP__Destroy;
@@ -31,7 +31,7 @@ int XPROTO_IP__ParseFrom(XPROTO_IP_t * const me, char unsigned *buf,
     /*>
      * The first 20 bytes are static. Therefore they can be copied
      * directly to the ip header object */
-    memcpy((void *)me, buf, XPROTO_IP__HDR_MIN_LEN);
+    ft_memcpy((void *)me, buf, XPROTO_IP__HDR_MIN_LEN);
     lenHdr = (me->hdrLen * 4);
     
     /*>
@@ -46,7 +46,7 @@ int XPROTO_IP__ParseFrom(XPROTO_IP_t * const me, char unsigned *buf,
             XPROTO_IP__enRetCode_ParseFrom_OptionMallocFailed,
             labelExit);
         /* copying continues from the 20th byte from the buf */
-        memcpy((void *)(me->pOption), 
+        ft_memcpy((void *)(me->pOption), 
                &(buf[XPROTO_IP__HDR_MIN_LEN]),
                lenOption);
     }
@@ -60,7 +60,7 @@ int XPROTO_IP__ParseFrom(XPROTO_IP_t * const me, char unsigned *buf,
             &retCode, 
             XPROTO_IP__enRetCode_ParseFrom_DataMallocFailed,
             labelExit);
-    memcpy((void *)(me->pData), &(buf[ lenHdr ]), lenData);
+    ft_memcpy((void *)(me->pData), &(buf[ lenHdr ]), lenData);
     me->dataLen = lenData;
     retCode = EXIT_SUCCESS;
 labelExit:
@@ -150,7 +150,7 @@ short unsigned XPROTO_IP__CalcCheckSum(XPROTO_IP_t * const me)
     if (me->pPktChkSum) 
     {
         /* Copy the static header into the buffer */
-        memcpy((void *)me->pPktChkSum, (void *)me, XPROTO_IP__HDR_MIN_LEN);
+        ft_memcpy((void *)me->pPktChkSum, (void *)me, XPROTO_IP__HDR_MIN_LEN);
 #ifdef XPROTO_IP__DEBUG
         for (int x=0; x<bufSz; x++)
         {
@@ -161,7 +161,7 @@ short unsigned XPROTO_IP__CalcCheckSum(XPROTO_IP_t * const me)
         /* Copy the options if available */
         if (lenOption && me->pOption)
         {
-            memcpy((void *)(me->pPktChkSum + XPROTO_IP__HDR_MIN_LEN),
+            ft_memcpy((void *)(me->pPktChkSum + XPROTO_IP__HDR_MIN_LEN),
                    (void *)(me->pOption),
                    lenOption);
         }

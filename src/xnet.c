@@ -6,7 +6,7 @@ void XNET__InitAddrInfo(struct addrinfo *pAi, int family,
                                               int protocol,
                                               int flags)
 {
-    memset((void *)pAi, 0, sizeof(struct addrinfo));
+    ft_memset((void *)pAi, 0, sizeof(struct addrinfo));
     pAi->ai_canonname = NULL;
     pAi->ai_addr = NULL;
     pAi->ai_next = NULL;
@@ -75,9 +75,6 @@ int  XNET__CreateSocket(struct addrinfo *pAi)
 escape:
     return (retCode);
 }
-
-
-
 
 
 

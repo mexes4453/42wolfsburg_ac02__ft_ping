@@ -37,7 +37,9 @@
                                     \n-v,                  verbose output \
                                     \n    --ttl=N          specify N as time-to-live \
                                     \n"
-
+# define XAPP__OPT_STR_USAGE "usage"
+# define XAPP__OPT_STR_HELP  "help"
+# define XAPP__OPT_STR_TTL   "ttl="
 # define XAPP__ERR_MSG_USAGE              "Try 'ft_ping --help' or 'ft_ping --usage' for more information."
 # define XAPP__ERR_MSG_OPT_COUNT_REQ_ARGS "option requires an argument -- 'c'\n" XAPP__ERR_MSG_USAGE
 # define XAPP__ERR_MSG_OPT_COUNT_VAL_INV  "invalid count value -- 'c'\n" XAPP__ERR_MSG_USAGE
@@ -198,7 +200,7 @@ int     XAPP__IsRxAddrValid(XAPP_t * const me);
  * remove ppoll
  * use recvfrom, sendto
  * use gettimeofday
- * replace all <string> function with that of libft
+ * [ x ] - replace all <string> function with that of libft
  * test user option, args, and input
  * perform clean up; NOT_USED 
  * Ensure that the user input addr is used during ping display

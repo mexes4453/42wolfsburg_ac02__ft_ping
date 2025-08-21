@@ -4,7 +4,6 @@
 # include <sys/types.h>
 # include <stdio.h>
 # include <stdlib.h>
-# include <string.h>
 # include "../inc/xnet.h"
 
 #define XPROTO_ICMP__CODE             (0)

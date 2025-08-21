@@ -4,12 +4,12 @@
 
 int XPARSER__StripLeadingWhiteSpace(char *strInput, char **strOutput)
 {
-    while ( strchr(XPARSER__WHITESPACE_CHARS, *strInput) && (*strInput != '\0'))
+    while ( ft_strchr(XPARSER__WHITESPACE_CHARS, *strInput) && (*strInput != '\0'))
     {
         strInput++;
     }
     *strOutput = strInput;
-    return (strlen(strInput));
+    return (ft_strlen(strInput));
 }
 
 
@@ -17,10 +17,10 @@ int XPARSER__StripLeadingWhiteSpace(char *strInput, char **strOutput)
 
 int XPARSER__StripTrailingWhiteSpace(char *strInput, char **strOutput)
 {
-    int lenStrInput = strlen(strInput);
+    int lenStrInput = ft_strlen(strInput);
     while (lenStrInput > 0)
     {
-        if ( !strchr(XPARSER__WHITESPACE_CHARS, *(strInput + lenStrInput - 1)) )
+        if ( !ft_strchr(XPARSER__WHITESPACE_CHARS, *(strInput + lenStrInput - 1)) )
         {
             *(strInput + lenStrInput) = '\0';
             break ;
@@ -38,7 +38,7 @@ int XPARSER__IsWhiteSpaceInStr(char *str)
 {
     int retCode = 0;
 
-    while ( !strchr(XPARSER__WHITESPACE_CHARS, *str) && (*str != '\0') )
+    while ( !ft_strchr(XPARSER__WHITESPACE_CHARS, *str) && (*str != '\0') )
     {
         str++;
     }
@@ -89,7 +89,7 @@ int XPARSER__IsNbr( char *s )
     strNbrLen =  XPARSER__StripWhiteSpace( s, &strNbr );
     if ( strNbrLen )
     {
-        while ( (*strNbr != '\0') && (isdigit( *strNbr ) ) )
+        while ( (*strNbr != '\0') && (ft_isdigit( *strNbr ) ) )
         {
            strNbr++;
         }

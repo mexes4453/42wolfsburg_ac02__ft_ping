@@ -41,10 +41,12 @@ GCC = gcc
 STD = c++17
 DEBUG = 
 VALGRIND = valgrind -s --leak-check=full --show-leak-kinds=all --track-origins=yes
-USR_LIB_PATH_XPNG = ./xlib/xpng
-USR_LIB_PATH_XDIR = ./xlib/xdir
-USR_LIB_XPNG=libxpng.a
-USR_LIB_XDIR=libxdir.a
+USR_LIB_PATH_LIBFT = ./xlib/libft
+#USR_LIB_PATH_XPNG = ./xlib/xpng
+#USR_LIB_PATH_XDIR = ./xlib/xdir
+USR_LIB_LIBFT=libft.a
+#USR_LIB_XPNG=libxpng.a
+#USR_LIB_XDIR=libxdir.a
 
 # FLAGS
 CFLAGS = -Werror -Wall -Wextra \
@@ -60,18 +62,19 @@ CFLAGS = -Werror -Wall -Wextra \
 		 # -lSDL2 -ldl -lGL -lz #-std=$(STD) 
 
 
-LIBFLAGS_STATIC = #-L$(USR_LIB_PATH_XPNG) -lxpng \
+LIBFLAGS_STATIC = -L$(USR_LIB_PATH_LIBFT) -lft \
+                  #-L$(USR_LIB_PATH_XPNG) -lxpng \
                   #-L$(USR_LIB_PATH_XDIR) -lxdir \
                   #-L$(USR_LIB_PATH_XDIR) -lxstring \
 
 DEPSFLAG =: -MM $($@:.o=.d)
 
 # INCLUDE
-INCLUDES = -I./ \
-           -I./inc \
-		   -I$(USR_LIB_PATH)/inc \
-           -I./xlib/xdir/inc/ \
-           -I./xlib/xutils/inc/ \
+INCLUDES = -I./inc \
+		   -I$(USR_LIB_PATH_LIBFT)\
+		   #-I./ \
+           #-I./xlib/xdir/inc/ \
+           #-I./xlib/xutils/inc/ \
            #-I$(USR_LIB_PATH_PRINTF) 
 
 #=== DEBUG ====
@@ -107,7 +110,7 @@ endef
 
 NAME : all
 all : $(NAME) 
-$(NAME) : $(OBJS) # $(USR_LIB_XPNG) $(USR_LIB_XDIR) 
+$(NAME) : $(OBJS) $(USR_LIB_LIBFT) # $(USR_LIB_XPNG) $(USR_LIB_XDIR) 
 	@echo "\033[1;33mCompiling Executables: $(NAME) \033[0m"
 	$(GCC) $^ $(LIBFLAGS_STATIC) $(CFLAGS) $(INCLUDES) -o $@ -Wl,-Map=$(NAME).map
 	@echo; echo "\033[1;32mCompilation Successful. \033[0m"
@@ -141,16 +144,22 @@ $(DIR_OBJ)/%.o : $(DIR_SRC)/%.c
 # ==================
 # External libraries
 # ==================
-$(USR_LIB_XPNG) :
-	$(call LIB_MAKE, $(USR_LIB_PATH_XPNG),$(USR_LIB_XPNG))
+$(USR_LIB_LIBFT) :
+	$(call LIB_MAKE, $(USR_LIB_PATH_LIBFT),$(USR_LIB_LIBFT))
 
-$(USR_LIB_XDIR) :
-	$(call LIB_MAKE, $(USR_LIB_PATH_XDIR),$(USR_LIB_XDIR))
+#$(USR_LIB_XPNG) :
+#	$(call LIB_MAKE, $(USR_LIB_PATH_XPNG),$(USR_LIB_XPNG))
+#
+#$(USR_LIB_XDIR) :
+#	$(call LIB_MAKE, $(USR_LIB_PATH_XDIR),$(USR_LIB_XDIR))
 
 
-# remove all object files
+# =======================================
+# REMOVE FILES - OBJS, DEP, TARGETS, LIBS
+# =======================================
 fclean:
 	rm -rf $(DIR_OBJ) $(DIR_DEP) *.map
+	$(call LIB_CLEAN, $(USR_LIB_PATH_LIBFT),$(USR_LIB_LIBFT))
 #	$(call LIB_CLEAN, $(USR_LIB_PATH_XPNG),$(USR_LIB_XPNG))
 #	$(call LIB_CLEAN, $(USR_LIB_PATH_XDIR),$(USR_LIB_XDIR))
 

@@ -4,7 +4,7 @@
 
 void ICMP_ECHO__Ctor(ICMP_ECHO_t * const me)
 {
-    memset((void *)me, 0, sizeof(ICMP_ECHO_t));
+    ft_memset((void *)me, 0, sizeof(ICMP_ECHO_t));
     //me->ParseFrom = ICMP_ECHO__ParseFrom;
     //me->ShowDetails = ICMP_ECHO__ShowDetails;
     //me->Destroy = ICMP_ECHO__Destroy;
@@ -24,7 +24,7 @@ void ICMP_ECHO__ParseFrom( ICMP_ECHO_t *me, char unsigned *buf,
     /*>
      * The first 8 bytes are static. Therefore they can be copied
      * directly to the ip header object */
-    memcpy((void *)me, buf, ICMP_ECHO__HDR_MIN_LEN);
+    ft_memcpy((void *)me, buf, ICMP_ECHO__HDR_MIN_LEN);
 
     /*>
      * Parse the data 
@@ -35,7 +35,7 @@ void ICMP_ECHO__ParseFrom( ICMP_ECHO_t *me, char unsigned *buf,
     {
         return ;
     }
-    memcpy((void *)(me->pData), &(buf[ ICMP_ECHO__HDR_MIN_LEN ]), lenData);
+    ft_memcpy((void *)(me->pData), &(buf[ ICMP_ECHO__HDR_MIN_LEN ]), lenData);
     me->dataLen = lenData;
     me->totalPacketLen = bufSz;
 }
@@ -88,7 +88,7 @@ int  ICMP_ECHO__CreatePacket(ICMP_ECHO_t * const me,
                              labelExit);
 
      /* fill up data with value based on msg type*/
-    memset((void *)me->pData, 'a', me->dataLen);
+    ft_memset((void *)me->pData, 'a', me->dataLen);
 
 
     /* Calculate and update the checksum */
@@ -151,11 +151,11 @@ int ICMP_ECHO__CalcCheckSum(ICMP_ECHO_t * const me)
                              ICMP_ECHO__enRetCode_CalcCheckSum_MallocDataFailed,
                              labelExit);
     pCheckSumData = me->pPktChkSum;
-    memset((void *)pCheckSumData, 0, me->totalPacketLen);
+    ft_memset((void *)pCheckSumData, 0, me->totalPacketLen);
 
     /* Copy header */
-    memcpy((void *)pCheckSumData, (void *)me, ICMP_ECHO__STATIC_HDR_SZ);
-    memcpy((void *)(pCheckSumData + ICMP_ECHO__STATIC_HDR_SZ), (void *)me->pData, me->dataLen);
+    ft_memcpy((void *)pCheckSumData, (void *)me, ICMP_ECHO__STATIC_HDR_SZ);
+    ft_memcpy((void *)(pCheckSumData + ICMP_ECHO__STATIC_HDR_SZ), (void *)me->pData, me->dataLen);
 
     /* clear existing checksum - starts at index 2*/
     *((uint16_t *)(pCheckSumData + 2)) = 0;
@@ -230,8 +230,8 @@ int ICMP_ECHO__ParseFromNet(ICMP_ECHO_t * const me, char unsigned *buf, ssize_t 
         ICMP_ECHO__enRetCode_ParseFromNet_PdataMallocFailed,
         labelExit);
     
-    memset((void *)me->pData, 0, me->dataLen);
-    memcpy((void *)me->pData, (buf + ICMP_ECHO__STATIC_HDR_SZ), me->dataLen);
+    ft_memset((void *)me->pData, 0, me->dataLen);
+    ft_memcpy((void *)me->pData, (buf + ICMP_ECHO__STATIC_HDR_SZ), me->dataLen);
 
     retCode = EXIT_SUCCESS;
 labelExit:

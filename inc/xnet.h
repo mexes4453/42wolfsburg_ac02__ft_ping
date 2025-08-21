@@ -3,15 +3,15 @@
 
 /* https://beej.us/guide/bgnet/html/ */
 # include <poll.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include "../inc/xnet_utils.h"
+# include <stdlib.h>
+# include <stdio.h>
+# include <sys/socket.h>
+# include <netdb.h>
+# include <netinet/in.h>
+# include <unistd.h>
+# include <sys/types.h>
+# include "../inc/xnet_utils.h"
+# include "../xlib/libft/libft.h"
 
 #define XNET__LITTLE_ENDIAN
 //#define XNET__DEBUG

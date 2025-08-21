@@ -10,7 +10,7 @@ char unsigned  XPROTO_ICMP__GetType(XPROTO_ICMP_t * const me)
 
 void XPROTO_ICMP__Ctor(XPROTO_ICMP_t * const me)
 {
-    memset((void *)me, 0, sizeof(XPROTO_ICMP_t));
+    ft_memset((void *)me, 0, sizeof(XPROTO_ICMP_t));
     //me->ParseFrom = XPROTO_ICMP__ParseFrom;
     //me->ShowDetails = XPROTO_ICMP__ShowDetails;
     //me->Destroy = XPROTO_ICMP__Destroy;
@@ -30,7 +30,7 @@ void XPROTO_ICMP__ParseFrom( XPROTO_ICMP_t *me, char unsigned *buf,
     /*>
      * The first 8 bytes are static. Therefore they can be copied
      * directly to the ip header object */
-    memcpy((void *)me, buf, XPROTO_ICMP__HDR_MIN_LEN);
+    ft_memcpy((void *)me, buf, XPROTO_ICMP__HDR_MIN_LEN);
 
     /*>
      * Parse the data 
@@ -41,7 +41,7 @@ void XPROTO_ICMP__ParseFrom( XPROTO_ICMP_t *me, char unsigned *buf,
     {
         return ;
     }
-    memcpy((void *)(me->pData), &(buf[ XPROTO_ICMP__HDR_MIN_LEN ]), lenData);
+    ft_memcpy((void *)(me->pData), &(buf[ XPROTO_ICMP__HDR_MIN_LEN ]), lenData);
     me->dataLen = lenData;
     me->totalPacketLen = bufSz;
 }
@@ -105,7 +105,7 @@ int  XPROTO_ICMP__CreatePacket(XPROTO_ICMP_t * const me,
     me->totalPacketLen = me->hdrLen + me->dataLen;
 
     /* fill up payload with data based on msg type*/
-    memset((void *)me->pData, 'a', datalen);
+    ft_memset((void *)me->pData, 'a', datalen);
 
     /* Calculate and update the checksum */
     me->CalcCheckSum(me);
@@ -164,10 +164,10 @@ int  XPROTO_ICMP__CreateSerialPacket(XPROTO_ICMP_t * const me, char unsigned **p
     if (*ppPkt)
     {
         /* copy header */
-        memcpy((void *)(*ppPkt), (void *)me, me->hdrLen);
+        ft_memcpy((void *)(*ppPkt), (void *)me, me->hdrLen);
 
         /* copy data */
-        memcpy((void *)(*(ppPkt) + me->hdrLen),
+        ft_memcpy((void *)(*(ppPkt) + me->hdrLen),
                (void *)me->pData,
                me->dataLen);
     }

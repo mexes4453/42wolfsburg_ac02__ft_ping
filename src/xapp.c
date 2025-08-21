@@ -111,23 +111,23 @@ int XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *p
             }
         case '-':
         {
-            if (  strcmp( (pChr + 1), "usage") == 0 )
+            if ( ft_strncmp( (pChr + 1), XAPP__OPT_STR_USAGE, ft_strlen(XAPP__OPT_STR_USAGE)) == 0 )
             {
                 retCode = XAPP__enRetCode_ProcessOptionChar_OptUsageHandled;
                 goto labelExit;
             }
-            else if ( strcmp( (pChr + 1), "help") == 0 ) 
+            else if ( ft_strncmp( (pChr + 1), XAPP__OPT_STR_HELP, ft_strlen(XAPP__OPT_STR_HELP)) == 0 ) 
             {
                 retCode = XAPP__enRetCode_ProcessOptionChar_OptUsageHandled;
                 goto labelExit;
             }
-            else if ( strncmp( (pChr + 1), "ttl=", 4) == 0 )
+            else if ( ft_strncmp( (pChr + 1), "ttl=", 4) == 0 )
             {
                 // check that all the nbr characters are digit before
                 // converting from string to integer.
-                XPARSER__IsNbr( pChr + strlen("ttl=") +  1 );
-                printf( "The ttl value ( %s )", *(pChr + 4));
-                nbrVal = atoi( *(pChr + 4) );
+                XPARSER__IsNbr( pChr + ft_strlen("ttl=") +  1 );
+                printf( "The ttl value ( %s )", (pChr + 4));
+                nbrVal = ft_atoi( (pChr + 4) );
                 me->option.optTimeToLive = nbrVal;
                 
             }
@@ -156,7 +156,7 @@ int XAPP__HandleOpt(XAPP_t * const me, char *strOpt, char *argv[], int *pArgIdx)
     int retCode = 0;
 
     /* check for any whitespace in option str */
-    if (XPARSER__IsWhiteSpaceInStr(strOpt) || (strlen(strOpt) <= 1)) 
+    if (XPARSER__IsWhiteSpaceInStr(strOpt) || (ft_strlen(strOpt) <= 1)) 
     {
         retCode = XAPP__enRetCode_HandleUserInput_InvalidOptionFormat;
         goto labelExit;
@@ -184,7 +184,7 @@ labelExit:
 
 void     XAPP__Ctor(XAPP_t * const me)
 {
-    memset( (void *)me, 0, sizeof(XAPP_t));
+    ft_memset( (void *)me, 0, sizeof(XAPP_t));
 }
 
 
@@ -569,7 +569,7 @@ void    XAPP__StatsUpdate(XAPP_t * const me)
     /*> compute min rtt : compare with the most recent computed rtt */
     if (me->stats.tRttMin.tv_nsec + me->stats.tRttMin.tv_sec == 0)
     {
-        memcpy((void *)&(me->stats.tRttMin), 
+        ft_memcpy((void *)&(me->stats.tRttMin), 
                (void *)&(me->stats.tDuration),
                sizeof(XTIMER__timespec_t));
     }
@@ -667,7 +667,7 @@ static void XAPP__StrFindReplace(char *str, char s, char r )
     {
         return ;
     }
-    txtlen = strlen(str); 
+    txtlen = ft_strlen(str); 
     while ( idx < txtlen)
     {
         if ( str[idx] == s )
@@ -774,7 +774,7 @@ int  XAPP__IsRxAddrValid(XAPP_t * const me)
                                      XAPP__enRetCode_IsRxAddrValid_AddrResFailed,
                                      labelExit);
                                      
-    retCode = strcmp(me->rxAddrBuf, me->txAddrBuf);
+    retCode = ft_strncmp(me->rxAddrBuf, me->txAddrBuf, ft_strlen(me->txAddrBuf));
     XNET_UTILS__ASSERT_UPD_REDIRECT( (retCode == EXIT_SUCCESS),
                                      &retCode,
                                      XAPP__enRetCode_IsRxAddrValid_InvalidRecvAddr,
@@ -866,8 +866,8 @@ void    XAPP__Wait(XAPP_t * const me)
     XTIMER__timespec_t timeCurr;
     XTIMER__timespec_t duration;
 
-    memset((void *)&duration, 0, sizeof(duration));
-    memset((void *)&timeCurr, 0, sizeof(timeCurr));
+    ft_memset((void *)&duration, 0, sizeof(duration));
+    ft_memset((void *)&timeCurr, 0, sizeof(timeCurr));
 
     /* Check to see that a time stamp was recorded prior to packet transmission */
     if ( me->stats.tStart.tv_nsec + me->stats.tStart.tv_sec != 0)
@@ -883,7 +883,7 @@ void    XAPP__Wait(XAPP_t * const me)
         {
             pause();
         }
-        memset((void *)&(me->stats.tStart), 0, sizeof(XTIMER__timespec_t));
+        ft_memset((void *)&(me->stats.tStart), 0, sizeof(XTIMER__timespec_t));
     }
 }
 
