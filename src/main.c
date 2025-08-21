@@ -20,8 +20,10 @@ int main(int argc, char *argv[])
                                     labelExit);
     
     retCode = XAPP__Connect(pAppVar);
-    XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == 0), &retCode, retCode, labelExit);
-
+    XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == EXIT_SUCCESS), 
+                                    &retCode, 
+                                    retCode,
+                                    labelExit);
 
     XAPP__ShowStartMsg(pAppVar);
 
@@ -83,7 +85,7 @@ labelExit:
     {
         XAPP__StatsShowSummary(pAppVar);
     }
-//labelCleanup: /* clean up */
+
     XAPP__Destroy(pAppVar);
     return (retCode);
 }

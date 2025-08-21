@@ -16,5 +16,14 @@ int XPARSER__StripTrailingWhiteSpace( char *strInput, char **strOutput);
 int XPARSER__StripWhiteSpace( char *strInput, char **strOutput);
 int XPARSER__IsWhiteSpaceInStr( char *str);
 
+/**
+ * @brief Check that all non-whitespace characters in a string are digit char
+ *
+ * @param s : input string
+ * @return rcBool: 1 -> true:  all character are digit char
+ *                 0 -> false: otherwise
+ * */
+int XPARSER__IsNbr( char *s );
+
 
 #endif /* XPARSER_H */

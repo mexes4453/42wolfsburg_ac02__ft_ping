@@ -40,6 +40,7 @@
 
 # define XAPP__ERR_MSG_USAGE              "Try 'ft_ping --help' or 'ft_ping --usage' for more information."
 # define XAPP__ERR_MSG_OPT_COUNT_REQ_ARGS "option requires an argument -- 'c'\n" XAPP__ERR_MSG_USAGE
+# define XAPP__ERR_MSG_OPT_COUNT_VAL_INV  "invalid count value -- 'c'\n" XAPP__ERR_MSG_USAGE
 # define XAPP__ERR_MSG_OPT_INVALID        "invalid option --" 
 
 #ifdef XAPP__DEBUG
@@ -74,6 +75,7 @@ typedef enum XAPP__retCode_e
     XAPP__enRetCode_ProcessOptionChar_InvalidOptFormatCount,
     XAPP__enRetCode_ProcessOptionChar_NoOptVal,
     XAPP__enRetCode_ProcessOptionChar_InvalidOption,
+    XAPP__enRetCode_ProcessOptionChar_CountValInvalid,
     XAPP__enRetCode_Max
 
 }   XAPP__retCode_t;
@@ -199,6 +201,7 @@ int     XAPP__IsRxAddrValid(XAPP_t * const me);
  * replace all <string> function with that of libft
  * test user option, args, and input
  * perform clean up; NOT_USED 
+ * Ensure that the user input addr is used during ping display
  * [ x ] - verify the address on rxPacket
  * [ x ] - update packet being sent with sequence number
  * [ x ] - seq should start from 0

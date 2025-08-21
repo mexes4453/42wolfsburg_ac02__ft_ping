@@ -77,3 +77,28 @@ int XPARSER__StripWhiteSpace(char *strInput, char **strOutput)
 }
 
 
+
+
+
+int XPARSER__IsNbr( char *s )
+{
+    int   rcBool = 0;
+    char *strNbr = NULL;
+    int   strNbrLen;
+    
+    strNbrLen =  XPARSER__StripWhiteSpace( s, &strNbr );
+    if ( strNbrLen )
+    {
+        while ( (*strNbr != '\0') && (isdigit( *strNbr ) ) )
+        {
+           strNbr++;
+        }
+        if ( *strNbr == '\0' )
+        {
+            rcBool = 1;
+        }
+    }
+    return (rcBool);
+}
+
+

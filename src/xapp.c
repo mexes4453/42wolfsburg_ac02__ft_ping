@@ -57,11 +57,12 @@ labelExit:
 
 
 
+
 int XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx)
 {
     int  retCode = XAPP__enRetCode_ProcessOptionChar_Init;
     char chr = *pChr;
-    int  cntValue = 0;
+    int  nbrVal = 0;
 
     printf("==> opt: %s\n", (pChr-1));
     switch (chr)
@@ -94,23 +95,43 @@ int XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *p
                 }
                 /*>
                  * Retrieve count value string from next argv[ idx ] and conv to int */
-                cntValue = atoi( argv[ *pArgIdx ] );
-                me->option.optPktCnt = cntValue;
+                // check that all the nbr characters are digit before
+                // converting from string to integer.
+                nbrVal = atoi( argv[ *pArgIdx ] );
+                me->option.optPktCnt = nbrVal;
 
                 printf("Count value: (%ld)\n", me->option.optPktCnt);
-                if (cntValue == 0)
+                if (nbrVal == 0)
                 {
-                    printf("Invalid count value for option (c)\n");
-                    retCode = -504;
+                    retCode = XAPP__enRetCode_ProcessOptionChar_CountValInvalid;
                     goto labelExit;
                 }
-                retCode = 0;
+                retCode = EXIT_SUCCESS;
                 break ;
             }
         case '-':
         {
-            /* Do nothing */
-            retCode = 0;
+            if (  strcmp( (pChr + 1), "usage") == 0 )
+            {
+                retCode = XAPP__enRetCode_ProcessOptionChar_OptUsageHandled;
+                goto labelExit;
+            }
+            else if ( strcmp( (pChr + 1), "help") == 0 ) 
+            {
+                retCode = XAPP__enRetCode_ProcessOptionChar_OptUsageHandled;
+                goto labelExit;
+            }
+            else if ( strncmp( (pChr + 1), "ttl=", 4) == 0 )
+            {
+                // check that all the nbr characters are digit before
+                // converting from string to integer.
+                XPARSER__IsNbr( pChr + strlen("ttl=") +  1 );
+                printf( "The ttl value ( %s )", *(pChr + 4));
+                nbrVal = atoi( *(pChr + 4) );
+                me->option.optTimeToLive = nbrVal;
+                
+            }
+            retCode = EXIT_SUCCESS;
             break ; 
         }
         default:
@@ -167,6 +188,8 @@ void     XAPP__Ctor(XAPP_t * const me)
 }
 
 
+
+
 void  XAPP__Init(XAPP_t * const me)
 {
     /* Initialise the sig action and event */
@@ -195,7 +218,6 @@ void  XAPP__Init(XAPP_t * const me)
     timer_create(CLOCK_MONOTONIC, &(me->timerEvt), &(me->timerId));
 #endif /* clean up */
 }
-
 
 
 
