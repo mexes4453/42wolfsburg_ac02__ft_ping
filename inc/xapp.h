@@ -5,6 +5,7 @@
 # include <unistd.h>
 # include <signal.h>
 # include <math.h>
+# include <stdarg.h>
 # include "../inc/xnet.h"
 # include "../inc/xtimer.h"
 # include "../inc/xproto_ip.h"
@@ -45,7 +46,13 @@
 # define XAPP__ERR_MSG_USAGE              "Try 'ft_ping --help' or 'ft_ping --usage' for more information.\n"
 # define XAPP__ERR_MSG_OPT_COUNT_REQ_ARGS "option requires an argument -- 'c'\n" XAPP__ERR_MSG_USAGE
 # define XAPP__ERR_MSG_OPT_COUNT_VAL_INV  "invalid count value -- 'c'\n" XAPP__ERR_MSG_USAGE
-# define XAPP__ERR_MSG_OPT_INVALID        "invalid option --" 
+# define XAPP__ERR_MSG_OPT_INVALID        "%s: invalid option -- '%c'\n" XAPP__ERR_MSG_USAGE
+# define XAPP__ERR_MSG_OPT_INVALID_VALUE  "%s: invalid value (`%s' near `%s')\n" 
+# define XAPP__ERR_MSG_OPT_ARG_REQ        "%s: option '--%s' requires an argument\n" XAPP__ERR_MSG_USAGE
+# define XAPP__ERR_MSG_OPT_VAL_SMALL      "%s: option value too small: %d\n"
+# define XAPP__ERR_MSG_OPT_UNRECOGNISED   "%s: unrecognized option '%s'\n" XAPP__ERR_MSG_USAGE
+
+
 
 #ifdef XAPP__DEBUG
 # define XAPP_D_VALIDATE_RX_PKT "\n[ XAPP::VALIDATE_RX_PKT ]"
@@ -76,12 +83,16 @@ typedef enum XAPP__retCode_e
     XAPP__enRetCode_HandleUserInput_InvalidOptionFormat,
     XAPP__enRetCode_ProcessOptionChar_Init,
     XAPP__enRetCode_ProcessOptionChar_OptUsageHandled,
+    XAPP__enRetCode_ProcessOptionChar_OptHelpHandled,
     XAPP__enRetCode_ProcessOptionChar_InvalidOptFormatCount,
     XAPP__enRetCode_ProcessOptionChar_NoOptVal,
     XAPP__enRetCode_ProcessOptionChar_InvalidOption,
     XAPP__enRetCode_ProcessOptionChar_CountValInvalid,
     XAPP__enRetCode_ProcessOptionChar_OptUnknown,
     XAPP__enRetCode_HandleOptionTtl_Init,
+    XAPP__enRetCode_HandleOptionTtl_NoEqualSign,
+    XAPP__enRetCode_HandleOptionTtl_InvalidValue,
+    XAPP__enRetCode_HandleOptionTtl_OptValueTooSmall,
     XAPP__enRetCode_Max
 
 }   XAPP__retCode_t;
@@ -121,6 +132,7 @@ typedef struct XAPP__opt_s
     size_t  optPktCnt;
     size_t  optTimeToLive;
     char    *pOptHostAddr;
+    char    *progName;
 }   XAPP__opt_t;
 
 
@@ -167,9 +179,12 @@ typedef struct XAPP_s
 XAPP_t *XAPP__GetInstance(void);
 void    XAPP__Ctor( XAPP_t * const me);
 void    XAPP__Init( XAPP_t * const me);
-int     XAPP__HandleOpt( XAPP_t * const me, char *strOpt, char *argv[], int *pArgIdx);
-int     XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx);
 int     XAPP__HandleUserInput( XAPP_t * const me, int argc, char *argv[]);
+int     XAPP__HandleOpt( XAPP_t * const me, char *strOpt, char *argv[], int *pArgIdx);
+char   *XAPP__ProcChrOpt( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx, int *rc);
+char   *XAPP__ProcStrOpt( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx, int *rc);
+char   *XAPP__HandleStrOptionTtl( XAPP_t * const me, char *currStrChr, char *nextUsrArg, int *pRetCode);
+char   *XAPP__HandleChrOptionCount( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx, int *rc);
 int     XAPP__Connect( XAPP_t * const me);
 int     XAPP__CreateIcmpHeader( XAPP_t * const me);
 int     XAPP__CreateIcmpPacket( XAPP_t * const me, XPROTO_ICMP__eType_t msgType);
@@ -192,7 +207,6 @@ void    XAPP__ShowStartMsg( XAPP_t * const me);
 int     XAPP__CreateIcmpHeader(XAPP_t * const me);
 int     XAPP__CreateIcmpPacket(XAPP_t * const me, XPROTO_ICMP__eType_t msgType);
 int     XAPP__IsRxAddrValid(XAPP_t * const me);
-int     XAPP__HandleOptionTtl( char **pChr );
 
 
 
@@ -206,7 +220,7 @@ int     XAPP__HandleOptionTtl( char **pChr );
  * use recvfrom, sendto
  * use gettimeofday
  * replace switch with "if"
- * [ + ] handle option : ttl
+ * [ x ] handle option : ttl
  * test user option, args, and input
  * [ x ] - handle option : usage
  * [ x ] - handle option : help

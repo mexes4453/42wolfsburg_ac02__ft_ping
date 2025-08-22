@@ -3,6 +3,7 @@
 # include <stdlib.h>
 # include "../xlib/libft/libft.h"
 # define XPARSER__WHITESPACE_CHARS " \n\r\t\v"
+# define XPARSER__NULL_CHAR        '\0'
 
 int XPARSER__StripLeadingWhiteSpace( char *strInput, char **strOutput);
 int XPARSER__StripTrailingWhiteSpace( char *strInput, char **strOutput);

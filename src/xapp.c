@@ -20,6 +20,7 @@ int XAPP__HandleUserInput( XAPP_t *me, int argc, char *argv[])
     if (argc > 1)
     {
         argIdx = 1;
+        me->option.progName = argv[0];
         while (argIdx < argc)
         {
             XPARSER__StripWhiteSpace( argv[ argIdx ], &str);
@@ -57,62 +58,155 @@ labelExit:
 
 
 
-
-
-
-static inline void XAPP__ShowErrMsg( char *s )
+void  XAPP__ShowErrMsg(const char *text, ...)
 {
-    fprintf( stderr, "%s", s);
+    char buf[XAPP__RX_BUFSZ];
+    ft_memset(buf, 0, XAPP__RX_BUFSZ);
+    va_list args;
+    va_start(args, text);
+    vsprintf(buf, text, args);
+    va_end(args);
+    fprintf(stderr, "%s", buf);
+}
+
+
+
+char *XAPP__HandleChrOptionCount( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx, int *rc)
+{
+    int nbrVal = 0;
+
+    if (*(pChr + 1) != '\0')
+    {
+        *rc = XAPP__enRetCode_ProcessOptionChar_InvalidOptFormatCount;
+        goto labelExit;
+    }
+    /* increment argument index to where count value is expected */
+    *pArgIdx += 1;
+    if (argv[(*pArgIdx)] == NULL)
+    {
+        *rc = XAPP__enRetCode_ProcessOptionChar_NoOptVal;
+        goto labelExit;
+    }
+    /*>
+     * Retrieve count value string from next argv[ idx ] and conv to int */
+    // check that all the nbr characters are digit before
+    // converting from string to integer.
+    nbrVal = atoi(argv[*pArgIdx]);
+    // advance the argvIdx since it is now consumed.
+    me->option.optPktCnt = nbrVal;
+
+    printf("Count value: (%ld)\n", me->option.optPktCnt);
+    if (nbrVal == 0)
+    {
+        *rc = XAPP__enRetCode_ProcessOptionChar_CountValInvalid;
+        goto labelExit;
+    }
+    *rc = EXIT_SUCCESS;
+labelExit:
+    return ( pChr );
 }
 
 
 
 
 
-int     XAPP__HandleOptionTtl( char **pChr)
+char *XAPP__HandleStrOptionTtl( XAPP_t * const me, char *currStrChr, char *nextUsrArg, int *pRetCode)
 {
-    char *sTmp = NULL;
-    int  nbrVal = 0;
-    int  retCode = XAPP__enRetCode_HandleOptionTtl_Init;
+    int nbrVal = 0;
+    *pRetCode = XAPP__enRetCode_HandleOptionTtl_Init;
 
-    sTmp = pChr + ft_strlen(XAPP__OPT_STR_TTL);
-    if ( *(++sTmp) == '=' )
+    if ( *currStrChr != '=' )
     {
-        if ( XPARSER__IsNbr((++sTmp)) )
+        if (*currStrChr == XPARSER__NULL_CHAR)
         {
-            printf( "The ttl value ( %s )", sTmp);
-            nbrVal = ft_atoi( (sTmp) );
-            // check that nbrVal is not equal to zero 
-            // if so, handle error -> progTitle: option value too small: 0
-            me->option.optTimeToLive = nbrVal;
-            // advance the the pointer to the end of current argv[x]
+            if (nextUsrArg)
+            {
+                XAPP__ShowErrMsg(XAPP__ERR_MSG_OPT_INVALID_VALUE, me->option.progName, nextUsrArg, nextUsrArg);
+            }
+            else
+            {
+                XAPP__ShowErrMsg(XAPP__ERR_MSG_OPT_ARG_REQ, me->option.progName, XAPP__OPT_STR_TTL);
+            }
+            *pRetCode = XAPP__enRetCode_HandleOptionTtl_NoEqualSign;
+            goto labelExit;
         }
         else
         {
-            // handle error - prog_title: invalid value (`=[xxx]` near '=[xxx]`)
+            XAPP__ShowErrMsg(XAPP__ERR_MSG_OPT_UNRECOGNISED, me->option.progName, currStrChr-ft_strlen(XAPP__OPT_STR_TTL)-2);
+            *pRetCode = XAPP__enRetCode_ProcessOptionChar_OptUnknown;
+            goto labelExit;
         }
     }
-    else
+
+    if (!XPARSER__IsNbr((++currStrChr)))
     {
-        // handle error
-        // check if the argv[x] is the last
-        // handle - if current is last -> prog_title: option '--ttl' requires an argument \n showusage
-        // handle - if current is not the last -> prog_title: invalid value (`argv[next]` near 'argv[next]`)
+        XAPP__ShowErrMsg(XAPP__ERR_MSG_OPT_INVALID_VALUE, me->option.progName, currStrChr, currStrChr);
+        *pRetCode = XAPP__enRetCode_HandleOptionTtl_InvalidValue;
+        goto labelExit;
     }
-    retCode = EXIT_SUCCESS;
+
+    nbrVal = ft_atoi((currStrChr));
+    if (nbrVal == 0)
+    {
+        XAPP__ShowErrMsg(XAPP__ERR_MSG_OPT_VAL_SMALL, me->option.progName, nbrVal);
+        *pRetCode = XAPP__enRetCode_HandleOptionTtl_OptValueTooSmall;
+        goto labelExit;
+    }
+    me->option.optTimeToLive = nbrVal;
+    printf("The ttl value ( %d )\n", nbrVal);
+
+    // advance the the pointer to the last character in string before '\0'
+    currStrChr = ft_strchr(currStrChr, XPARSER__NULL_CHAR) - 1;
+
+    *pRetCode = EXIT_SUCCESS;
 labelExit:
-    return ( retCode );
+    return ( currStrChr );
 
 }
 
 
 
 
-int XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx)
+char   *XAPP__ProcStrOpt( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx, int *rc)
 {
-    int  retCode = XAPP__enRetCode_ProcessOptionChar_Init;
+    if (ft_strncmp((pChr + 1), XAPP__OPT_STR_USAGE, ft_strlen((pChr + 1))) == 0)
+    {
+        XAPP__ShowErrMsg(XAPP__MSG_FMT_USAGE);
+        *rc = XAPP__enRetCode_ProcessOptionChar_OptUsageHandled;
+        goto labelExit;
+    }
+    else if (ft_strncmp((pChr + 1), XAPP__OPT_STR_HELP, ft_strlen((pChr + 1))) == 0)
+    {
+        XAPP__ShowErrMsg(XAPP__MSG_FMT_HELP);
+        *rc = XAPP__enRetCode_ProcessOptionChar_OptHelpHandled;
+        goto labelExit;
+    }
+    else if (ft_strncmp((pChr + 1), XAPP__OPT_STR_TTL, ft_strlen(XAPP__OPT_STR_TTL)) == 0)
+    {
+        pChr += (ft_strlen(XAPP__OPT_STR_TTL) + 1);
+        pChr = XAPP__HandleStrOptionTtl(me, pChr, argv[((*pArgIdx) + 1)], rc);
+        XNET_UTILS__ASSERT_UPD_REDIRECT((*rc == EXIT_SUCCESS),
+                                        rc,
+                                        *rc,
+                                        labelExit);
+    }
+    else
+    {
+        XAPP__ShowErrMsg(XAPP__ERR_MSG_OPT_UNRECOGNISED, me->option.progName, (pChr - 1));
+        *rc = XAPP__enRetCode_ProcessOptionChar_OptUnknown;
+        goto labelExit;
+    }
+    *rc = EXIT_SUCCESS;
+labelExit:
+    return (pChr);
+}
+
+
+
+
+char   *XAPP__ProcChrOpt( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx, int *rc)
+{
     char chr = *pChr;
-    int  nbrVal = 0;
 
     printf("==> opt: %s\n", (pChr-1));
     switch (chr)
@@ -120,91 +214,33 @@ int XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *p
         case 'v':
             {
                 me->option.optVerbose = 1;
-                retCode = EXIT_SUCCESS;
+                *rc = EXIT_SUCCESS;
                 break ;
             }
         case '?':
             {
                 XAPP__ShowErrMsg( XAPP__MSG_FMT_HELP ) ;
-                retCode = XAPP__enRetCode_ProcessOptionChar_OptUsageHandled;
+                *rc = XAPP__enRetCode_ProcessOptionChar_OptUsageHandled;
                 break ;
             }
         case 'c':
             {
-                if ( *(pChr + 1) != '\0' )
-                {
-                    retCode = XAPP__enRetCode_ProcessOptionChar_InvalidOptFormatCount;
-                    goto labelExit;
-                }
-                /* increment argument index to where count value is expected */ 
-                *pArgIdx += 1;
-                if ( argv[ (*pArgIdx) ] == NULL )
-                {
-                    retCode = XAPP__enRetCode_ProcessOptionChar_NoOptVal;
-                    goto labelExit;
-                }
-                /*>
-                 * Retrieve count value string from next argv[ idx ] and conv to int */
-                // check that all the nbr characters are digit before
-                // converting from string to integer.
-                nbrVal = atoi( argv[ *pArgIdx ] );
-                me->option.optPktCnt = nbrVal;
-
-                printf("Count value: (%ld)\n", me->option.optPktCnt);
-                if (nbrVal == 0)
-                {
-                    retCode = XAPP__enRetCode_ProcessOptionChar_CountValInvalid;
-                    goto labelExit;
-                }
-                retCode = EXIT_SUCCESS;
+                XAPP__HandleChrOptionCount(me, pChr, argv, pArgIdx, rc);
                 break ;
             }
         case '-':
         {
-            if ( ft_strncmp( (pChr + 1), XAPP__OPT_STR_USAGE, ft_strlen((pChr + 1))) == 0 )
-            {
-                XAPP__ShowErrMsg( XAPP__MSG_FMT_USAGE ) ;
-                retCode = XAPP__enRetCode_ProcessOptionChar_OptUsageHandled;
-                goto labelExit;
-            }
-            else if ( ft_strncmp( (pChr + 1), XAPP__OPT_STR_HELP, ft_strlen((pChr + 1))) == 0 ) 
-            {
-                XAPP__ShowErrMsg( XAPP__MSG_FMT_HELP ) ;
-                retCode = XAPP__enRetCode_ProcessOptionChar_OptUsageHandled;
-                goto labelExit;
-            }
-            else if ( ft_strncmp( (pChr + 1), XAPP__OPT_STR_TTL, ft_strlen(XAPP__OPT_STR_TTL)) == 0 )
-            {
-                retCode = XAPP__HandleOptionTtl();
-                XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == EXIT_SUCCESS), 
-                                                 &retCode, 
-                                                 retCode,
-                                                 labelExit);
-            }
-            else
-            {
-                fprintf(stderr, "%s: %s '%s'\n%s",  argv[0], 
-                                                    "unrecognized option",
-                                                    (pChr - 1),
-                                                    XAPP__ERR_MSG_USAGE);
-                retCode = XAPP__enRetCode_ProcessOptionChar_OptUnknown;
-                goto labelExit;
-            }
-            retCode = EXIT_SUCCESS;
+            pChr = XAPP__ProcStrOpt(me, pChr, argv, pArgIdx, rc);
             break ; 
         }
         default:
         {
-            fprintf(stderr, "%s: %s '%c'\n%s",  argv[0], 
-                                                XAPP__ERR_MSG_OPT_INVALID,
-                                               *pChr,
-                                                XAPP__ERR_MSG_USAGE);
-            retCode = XAPP__enRetCode_ProcessOptionChar_InvalidOption;
+            XAPP__ShowErrMsg( XAPP__ERR_MSG_OPT_INVALID ,  me->option.progName, *pChr);
+            *rc = XAPP__enRetCode_ProcessOptionChar_InvalidOption;
             break ;
         }
     }
-labelExit:
-    return (retCode);
+    return (pChr);
 }
 
 
@@ -213,6 +249,9 @@ labelExit:
 int XAPP__HandleOpt(XAPP_t * const me, char *strOpt, char *argv[], int *pArgIdx)
 {
     int retCode = 0;
+    char *currStrChr = strOpt;
+    
+    
 
     /* check for any whitespace in option str */
     if (XPARSER__IsWhiteSpaceInStr(strOpt) || (ft_strlen(strOpt) <= 1)) 
@@ -220,18 +259,18 @@ int XAPP__HandleOpt(XAPP_t * const me, char *strOpt, char *argv[], int *pArgIdx)
         retCode = XAPP__enRetCode_HandleUserInput_InvalidOptionFormat;
         goto labelExit;
     }
+    /* Note that the first char in string is '-'. Hence, its skipped. */
+    currStrChr++;
 
-    do
+    while (  *currStrChr != '\0' )
     {
-        /* Note that the first char in string is '-'. Hence, its skipped. */
-        strOpt++;
-        
-        if ( *strOpt == '\0' )
-        {
-            break ;
-        }
-        retCode = XAPP__ProcessOptionChar( me, strOpt, argv, pArgIdx);
-    } while ( retCode == 0);
+        currStrChr = XAPP__ProcChrOpt( me, currStrChr, argv, pArgIdx, &retCode);
+        XNET_UTILS__ASSERT_UPD_REDIRECT( (retCode == EXIT_SUCCESS),
+                                         &retCode,
+                                          retCode,
+                                          labelExit);
+        currStrChr++;
+    }
 
 labelExit:
     return (retCode);
@@ -945,6 +984,7 @@ void    XAPP__Wait(XAPP_t * const me)
         ft_memset((void *)&(me->stats.tStart), 0, sizeof(XTIMER__timespec_t));
     }
 }
+
 
 
 

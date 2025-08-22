@@ -2,7 +2,7 @@
 
 static const XERR_t XERR__ErrTable[] =
     {
-        {XAPP__enRetCode_TxPacket_SendToFailed, "TxPacket->SendTo Failed"},
+        {XAPP__enRetCode_TxPacket_SendToFailed, "TxPacket::SendTo Failed"},
         {XAPP__enRetCode_RxPacket_Failed, "RxPacket Failed"},
         {XAPP__enRetCode_ProcessOptionChar_InvalidOptFormatCount, "Invalid option format for (c)"},
         {XAPP__enRetCode_ProcessOptionChar_NoOptVal,        XAPP__ERR_MSG_OPT_COUNT_REQ_ARGS},
