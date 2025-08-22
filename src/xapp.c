@@ -28,7 +28,6 @@ int XAPP__HandleUserInput( XAPP_t *me, int argc, char *argv[])
             if ( str[0] == '-')
             {
                 retCode = XAPP__HandleOpt( me, str, argv, &argIdx);
-                
             }
             else
             {
@@ -52,16 +51,61 @@ labelExit:
     return (retCode);
 }
 
-void XAPP__HandleOptionHelp( void )
+
+
+
+
+
+
+
+
+
+static inline void XAPP__ShowErrMsg( char *s )
 {
-    fprintf( stderr, "%s", XAPP__MSG_FMT_HELP);
+    fprintf( stderr, "%s", s);
 }
 
 
-void XAPP__HandleOptionUsage( void )
+
+
+
+int     XAPP__HandleOptionTtl( char **pChr)
 {
-    fprintf( stderr, "%s", XAPP__MSG_FMT_USAGE);
+    char *sTmp = NULL;
+    int  nbrVal = 0;
+    int  retCode = XAPP__enRetCode_HandleOptionTtl_Init;
+
+    sTmp = pChr + ft_strlen(XAPP__OPT_STR_TTL);
+    if ( *(++sTmp) == '=' )
+    {
+        if ( XPARSER__IsNbr((++sTmp)) )
+        {
+            printf( "The ttl value ( %s )", sTmp);
+            nbrVal = ft_atoi( (sTmp) );
+            // check that nbrVal is not equal to zero 
+            // if so, handle error -> progTitle: option value too small: 0
+            me->option.optTimeToLive = nbrVal;
+            // advance the the pointer to the end of current argv[x]
+        }
+        else
+        {
+            // handle error - prog_title: invalid value (`=[xxx]` near '=[xxx]`)
+        }
+    }
+    else
+    {
+        // handle error
+        // check if the argv[x] is the last
+        // handle - if current is last -> prog_title: option '--ttl' requires an argument \n showusage
+        // handle - if current is not the last -> prog_title: invalid value (`argv[next]` near 'argv[next]`)
+    }
+    retCode = EXIT_SUCCESS;
+labelExit:
+    return ( retCode );
+
 }
+
+
 
 
 int XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx)
@@ -69,7 +113,6 @@ int XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *p
     int  retCode = XAPP__enRetCode_ProcessOptionChar_Init;
     char chr = *pChr;
     int  nbrVal = 0;
-    char *sTmp = NULL;
 
     printf("==> opt: %s\n", (pChr-1));
     switch (chr)
@@ -82,7 +125,7 @@ int XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *p
             }
         case '?':
             {
-                XAPP__HandleOptionHelp();
+                XAPP__ShowErrMsg( XAPP__MSG_FMT_HELP ) ;
                 retCode = XAPP__enRetCode_ProcessOptionChar_OptUsageHandled;
                 break ;
             }
@@ -120,45 +163,23 @@ int XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *p
         {
             if ( ft_strncmp( (pChr + 1), XAPP__OPT_STR_USAGE, ft_strlen((pChr + 1))) == 0 )
             {
-                XAPP__HandleOptionUsage();
+                XAPP__ShowErrMsg( XAPP__MSG_FMT_USAGE ) ;
                 retCode = XAPP__enRetCode_ProcessOptionChar_OptUsageHandled;
                 goto labelExit;
             }
             else if ( ft_strncmp( (pChr + 1), XAPP__OPT_STR_HELP, ft_strlen((pChr + 1))) == 0 ) 
             {
-                XAPP__HandleOptionHelp();
+                XAPP__ShowErrMsg( XAPP__MSG_FMT_HELP ) ;
                 retCode = XAPP__enRetCode_ProcessOptionChar_OptUsageHandled;
                 goto labelExit;
             }
             else if ( ft_strncmp( (pChr + 1), XAPP__OPT_STR_TTL, ft_strlen(XAPP__OPT_STR_TTL)) == 0 )
             {
-                sTmp = pChr + ft_strlen(XAPP__OPT_STR_TTL);
-                if ( *(++sTmp) == '=' )
-                {
-                    if ( XPARSER__IsNbr((++sTmp)) )
-                    {
-                       printf( "The ttl value ( %s )", sTmp);
-                       nbrVal = ft_atoi( (sTmp) );
-                       // check that nbrVal is not equal to zero 
-                       // if so, handle error -> progTitle: option value too small: 0
-                       me->option.optTimeToLive = nbrVal;
-                       // advance the the pointer to the end of current argv[x]
-                    }
-                    else
-                    {
-                         // handle error - prog_title: invalid value (`=[xxx]` near '=[xxx]`)
-                    }
-                }
-                else
-                {
-                    // handle error
-                    // check if the argv[x] is the last
-                    // handle - if current is last -> prog_title: option '--ttl' requires an argument \n showusage
-                    // handle - if current is not the last -> prog_title: invalid value (`argv[next]` near 'argv[next]`)
-                }
-                // check that all the nbr characters are digit before
-                // converting from string to integer.
-                
+                retCode = XAPP__HandleOptionTtl();
+                XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == EXIT_SUCCESS), 
+                                                 &retCode, 
+                                                 retCode,
+                                                 labelExit);
             }
             else
             {

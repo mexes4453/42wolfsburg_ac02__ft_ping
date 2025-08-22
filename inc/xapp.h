@@ -14,34 +14,34 @@
 
 #define XAPP__ADDR_DST  "142.250.181.238"   ///< Google.com ip addr
 #define XAPP__ADDR_NAME  "www.google.com"   ///< Google.com ip addr
-#define XAPP__DEF_REQNBR          (4)
-#define XAPP__SOCKFD_MAX_NBR      (1)
-#define XAPP__RX_BUFSZ            (1024)
-#define XAPP__BUFSZ_ADDR          (100)
-#define XAPP__BUFSZ_TXTSTR        (512)
-#define XAPP__DEF_ICMP_DATA_SIZE  (56)
-#define XAPP__TRUE                (1)
-#define XAPP__POLL_BLOCK_DURATION (1)    ///< 1 second
-#define XAPP__INFO_PING_START     "PING %s (%s): %d data bytes"
-#define XAPP__MSG_FMT_RTT1         "%ld bytes from %s: "
-#define XAPP__MSG_FMT_RTT2         "icmp_seq=%d ttl=%d time=%.3f ms\n"
-#define XAPP__MSG_FMT_STATS_TITLE  "--- %s ping statistics ---"
-#define XAPP__MSG_FMT_STATS        "\n %ld packets transmitted, %ld packets received, %d%c packet loss \
-                                    \n round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms \n"
-# define XAPP__OPT_STR_USAGE       "usage"
-# define XAPP__OPT_STR_HELP        "help"
-# define XAPP__OPT_STR_TTL         "ttl"
-# define XAPP__MSG_FMT_HELP         "Usage: ft__ping [OPTION...] HOST ... \
-                                    \nSend ICMP ECHO_REQUEST packets to network hosts. \
-                                    \n\nOptions valid for all request types: \
-                                    \n-?, --help           give this help list \
-                                    \n    --usage          give a short usage message \
-                                    \n-c,                  stop after sending NUMBER packets \
-                                    \n-v,                  verbose output \
-                                    \n    --ttl=N          specify N as time-to-live \
-                                    \n"
-# define XAPP__MSG_FMT_USAGE        "Usage: ft__ping [-v?] [-c NUMBER] [--ttl=N] " \
-                                    "[--usage] [--help] HOST ...  \n"
+#define XAPP__DEF_REQNBR               (4)
+#define XAPP__SOCKFD_MAX_NBR           (1)
+#define XAPP__RX_BUFSZ                 (1024)
+#define XAPP__BUFSZ_ADDR               (100)
+#define XAPP__BUFSZ_TXTSTR             (512)
+#define XAPP__DEF_ICMP_DATA_SIZE       (56)
+#define XAPP__TRUE                     (1)
+#define XAPP__POLL_BLOCK_DURATION      (1)    ///< 1 second
+#define XAPP__INFO_PING_START          "PING %s (%s): %d data bytes"
+#define XAPP__MSG_FMT_RTT1              "%ld bytes from %s: "
+#define XAPP__MSG_FMT_RTT2              "icmp_seq=%d ttl=%d time=%.3f ms\n"
+#define XAPP__MSG_FMT_STATS_TITLE       "--- %s ping statistics ---"
+#define XAPP__MSG_FMT_STATS             "\n %ld packets transmitted, %ld packets received, %d%c packet loss \
+                                         \n round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms \n"
+# define XAPP__OPT_STR_USAGE            "usage"
+# define XAPP__OPT_STR_HELP             "help"
+# define XAPP__OPT_STR_TTL              "ttl"
+# define XAPP__MSG_FMT_HELP              "Usage: ft__ping [OPTION...] HOST ... \
+                                         \nSend ICMP ECHO_REQUEST packets to network hosts. \
+                                         \n\nOptions valid for all request types: \
+                                         \n-?, --help           give this help list \
+                                         \n    --usage          give a short usage message \
+                                         \n-c,                  stop after sending NUMBER packets \
+                                         \n-v,                  verbose output \
+                                         \n    --ttl=N          specify N as time-to-live \
+                                         \n"
+# define XAPP__MSG_FMT_USAGE             "Usage: ft__ping [-v?] [-c NUMBER] [--ttl=N] " \
+                                         "[--usage] [--help] HOST ...  \n"
 # define XAPP__ERR_MSG_USAGE              "Try 'ft_ping --help' or 'ft_ping --usage' for more information.\n"
 # define XAPP__ERR_MSG_OPT_COUNT_REQ_ARGS "option requires an argument -- 'c'\n" XAPP__ERR_MSG_USAGE
 # define XAPP__ERR_MSG_OPT_COUNT_VAL_INV  "invalid count value -- 'c'\n" XAPP__ERR_MSG_USAGE
@@ -81,6 +81,7 @@ typedef enum XAPP__retCode_e
     XAPP__enRetCode_ProcessOptionChar_InvalidOption,
     XAPP__enRetCode_ProcessOptionChar_CountValInvalid,
     XAPP__enRetCode_ProcessOptionChar_OptUnknown,
+    XAPP__enRetCode_HandleOptionTtl_Init,
     XAPP__enRetCode_Max
 
 }   XAPP__retCode_t;
@@ -167,8 +168,6 @@ XAPP_t *XAPP__GetInstance(void);
 void    XAPP__Ctor( XAPP_t * const me);
 void    XAPP__Init( XAPP_t * const me);
 int     XAPP__HandleOpt( XAPP_t * const me, char *strOpt, char *argv[], int *pArgIdx);
-void    XAPP__HandleOptionHelp(void);
-void    XAPP__HandleOptionUsage(void);
 int     XAPP__ProcessOptionChar( XAPP_t * const me, char *pChr, char *argv[], int *pArgIdx);
 int     XAPP__HandleUserInput( XAPP_t * const me, int argc, char *argv[]);
 int     XAPP__Connect( XAPP_t * const me);
@@ -193,6 +192,7 @@ void    XAPP__ShowStartMsg( XAPP_t * const me);
 int     XAPP__CreateIcmpHeader(XAPP_t * const me);
 int     XAPP__CreateIcmpPacket(XAPP_t * const me, XPROTO_ICMP__eType_t msgType);
 int     XAPP__IsRxAddrValid(XAPP_t * const me);
+int     XAPP__HandleOptionTtl( char **pChr );
 
 
 
