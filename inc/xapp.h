@@ -217,6 +217,7 @@ int     XAPP__IsRxAddrValid(XAPP_t * const me);
  * set root privilege
  * set the proper load data according to iputeils ref.
  * remove ppoll
+ * remove perror and replace with strerror or gai_strerror
  * use recvfrom, sendto
  * use gettimeofday
  * replace switch with "if"

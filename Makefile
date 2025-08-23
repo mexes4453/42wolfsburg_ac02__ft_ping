@@ -50,9 +50,9 @@ USR_LIB_LIBFT=libft.a
 
 # FLAGS
 CFLAGS = -Werror -Wall -Wextra \
-		 -lrt \
-		 -lm \
 	     -DXAPP__DEBUG_HANDLE_USER_INPUT \
+		 #-lrt \
+		 #-lm \
 		 #-DXAPP__DEBUG \
 		 #-DICMP_ECHO__DEBUG \
 		 #-DXNET__DEBUG \
