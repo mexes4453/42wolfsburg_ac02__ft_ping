@@ -32,8 +32,8 @@ int main(int argc, char *argv[])
         /*>
          * Blocks indefinitely until something happens in any of the 
          * file descriptors */
-        pAppVar->ready = ppoll(pAppVar->fds, pAppVar->nfds, &(pAppVar->stats.tPoll), NULL);
-                             
+        //pAppVar->ready = ppoll(pAppVar->fds, pAppVar->nfds, &(pAppVar->stats.tPoll), NULL);
+#if 0 /* CLEAN_UP */                             
         if (pAppVar->ready)
         {
             if (pAppVar->fds[0].revents & POLLIN)
@@ -57,10 +57,7 @@ int main(int argc, char *argv[])
             printf("\nNothing to read !\n");
 #endif
         }
-        /*> 
-         * Put process to sleep and Wait for timer set prior to
-         * transmit to expire before sending the next packet */
-        XAPP__Wait(pAppVar);
+#endif /* CLEAN_UP */                             
 
         /* send tx packet  */
         if (pAppVar->pktCntTx >= XAPP__DEF_REQNBR)
@@ -71,6 +68,23 @@ int main(int argc, char *argv[])
         {
             retCode = XAPP__TxPacket(pAppVar);
             XNET_UTILS__ASSERT_UPD_REDIRECT((retCode == 0), &retCode, retCode, labelExit);
+        }
+        /*> 
+         * Put process to sleep and Wait for timer set prior to
+         * transmit to expire before sending the next packet */
+        XAPP__Wait(pAppVar);
+        
+        // receive the packet 
+        XAPP__GetTimeOfEnd(pAppVar);
+        if (XAPP__RxPacket(pAppVar) == EXIT_SUCCESS)
+        {
+            retCode = XAPP__ValidateRxPkt(pAppVar);
+            if (retCode == EXIT_SUCCESS)
+            {
+                pAppVar->pktCntRx++;
+                XAPP__StatsComputeRtt(pAppVar);
+                XAPP__StatsShowRtt(pAppVar);
+            }
         }
     }
 

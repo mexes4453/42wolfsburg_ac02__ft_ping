@@ -33,7 +33,7 @@ DEPS := $(patsubst %, $(DIR_DEP)/%, $(OBJ_FILES))
 
 MSG = 
 REP = origin
-NAME = ft__ping
+NAME = ft_ping
 
 
 CC = g++
@@ -42,11 +42,7 @@ STD = c++17
 DEBUG = 
 VALGRIND = valgrind -s --leak-check=full --show-leak-kinds=all --track-origins=yes
 USR_LIB_PATH_LIBFT = ./xlib/libft
-#USR_LIB_PATH_XPNG = ./xlib/xpng
-#USR_LIB_PATH_XDIR = ./xlib/xdir
 USR_LIB_LIBFT=libft.a
-#USR_LIB_XPNG=libxpng.a
-#USR_LIB_XDIR=libxdir.a
 
 # FLAGS
 CFLAGS = -Werror -Wall -Wextra \
@@ -112,7 +108,7 @@ NAME : all
 all : $(NAME) 
 $(NAME) : $(OBJS) $(USR_LIB_LIBFT) # $(USR_LIB_XPNG) $(USR_LIB_XDIR) 
 	@echo "\033[1;33mCompiling Executables: $(NAME) \033[0m"
-	$(GCC) $^ $(LIBFLAGS_STATIC) $(CFLAGS) $(INCLUDES) -o $@ -Wl,-Map=$(NAME).map
+	$(GCC) $^ $(LIBFLAGS_STATIC) $(CFLAGS) $(INCLUDES) -o $@
 	@echo; echo "\033[1;32mCompilation Successful. \033[0m"
 	@echo; echo
 
@@ -147,12 +143,6 @@ $(DIR_OBJ)/%.o : $(DIR_SRC)/%.c
 $(USR_LIB_LIBFT) :
 	$(call LIB_MAKE, $(USR_LIB_PATH_LIBFT),$(USR_LIB_LIBFT))
 
-#$(USR_LIB_XPNG) :
-#	$(call LIB_MAKE, $(USR_LIB_PATH_XPNG),$(USR_LIB_XPNG))
-#
-#$(USR_LIB_XDIR) :
-#	$(call LIB_MAKE, $(USR_LIB_PATH_XDIR),$(USR_LIB_XDIR))
-
 
 # =======================================
 # REMOVE FILES - OBJS, DEP, TARGETS, LIBS
@@ -160,8 +150,6 @@ $(USR_LIB_LIBFT) :
 fclean:
 	rm -rf $(DIR_OBJ) $(DIR_DEP) *.map
 	$(call LIB_CLEAN, $(USR_LIB_PATH_LIBFT),$(USR_LIB_LIBFT))
-#	$(call LIB_CLEAN, $(USR_LIB_PATH_XPNG),$(USR_LIB_XPNG))
-#	$(call LIB_CLEAN, $(USR_LIB_PATH_XDIR),$(USR_LIB_XDIR))
 
 # remove final target files
 clean: fclean
