@@ -306,6 +306,21 @@ void  XAPP__Init(XAPP_t * const me)
 
     /* Set the process id to server as all packet id */
     me->pid = getpid() & 0xFFFF;
+    
+    /* Set up the recv message component */
+    me->msgRxIOvector->iov_base = me->recvBuf;
+    me->msgRxIOvector->iov_len = sizeof( me->recvBuf);
+
+    /* Setup the recv message header  */
+    ft_memset(&(me->msgRx), 0, sizeof(me->msgRx));
+    me->dstAddrLen = sizeof(me->dstAddr);
+    me->msgRx.msg_name = &(me->dstAddr);
+    me->msgRx.msg_namelen = me->dstAddrLen;
+    me->msgRx.msg_iov = me->msgRxIOvector;
+    me->msgRx.msg_iovlen = XAPP__NBR_IO_VECTORS;
+
+
+
 
     /* Create timer */
 #if 0 /* clean up */
@@ -465,7 +480,6 @@ int XAPP__TxPacket(XAPP_t * const me)
     /* send data to dest address */
     XAPP__GetTimeOfStart(me);
     alarm(1);
-    //retCode = timer_settime(me->timerId, 0, &(me->timerVal), NULL);
     me->datalenTx = sendto(me->sockfd, (void *)(me->pIcmpHdrTx->pPktChkSum), 
                                        me->pIcmpHdrTx->totalPacketLen,
                                        0,
@@ -505,16 +519,25 @@ int  XAPP__RxPacket(XAPP_t * const me)
     int retCode = XAPP__enRetCode_RxPacket_Init;
 
     /* receive the response back */
+#if 0 /* NOT_USED */
     me->datalenRx  = recvfrom(me->sockfd,
                               me->recvBuf, 
                               XAPP__RX_BUFSZ, 
                               0, 
                               (struct sockaddr *)(&(me->dstAddr)),
                               &(me->dstAddrLen) );
+#endif /* NOT_USED */
+    me->datalenRx  = recvmsg(me->sockfd, &(me->msgRx), 0);
     if (me->datalenRx  <= 0)
     {
+        if ( (errno == EAGAIN) || (errno == EWOULDBLOCK) )
+        {
+            /* No message in socket to read */
+            retCode = XAPP__enRetCode_RxPacket_NoMsg;
+
+        }
         printf("recv error\n");
-        retCode = XAPP__enRetCode_RxPacket_Failed;
+        retCode = XAPP__enRetCode_RxPacket_RecvMsg_Failed;
     }
     else
     {

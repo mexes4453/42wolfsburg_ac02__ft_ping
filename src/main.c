@@ -75,12 +75,13 @@ int main(int argc, char *argv[])
         XAPP__Wait(pAppVar);
         
         // receive the packet 
-        XAPP__GetTimeOfEnd(pAppVar);
-        if (XAPP__RxPacket(pAppVar) == EXIT_SUCCESS)
+        retCode = XAPP__RxPacket(pAppVar);
+        if (retCode == EXIT_SUCCESS)
         {
             retCode = XAPP__ValidateRxPkt(pAppVar);
             if (retCode == EXIT_SUCCESS)
             {
+                XAPP__GetTimeOfEnd(pAppVar);
                 pAppVar->pktCntRx++;
                 XAPP__StatsComputeRtt(pAppVar);
                 XAPP__StatsShowRtt(pAppVar);

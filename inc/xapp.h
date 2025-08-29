@@ -6,6 +6,7 @@
 # include <signal.h>
 # include <math.h>
 # include <stdarg.h>
+# include <errno.h>
 # include "../inc/xnet.h"
 # include "../inc/xtimer.h"
 # include "../inc/xproto_ip.h"
@@ -22,6 +23,7 @@
 #define XAPP__BUFSZ_TXTSTR             (512)
 #define XAPP__DEF_ICMP_DATA_SIZE       (56)
 #define XAPP__TRUE                     (1)
+#define XAPP__NBR_IO_VECTORS           (1)
 #define XAPP__POLL_BLOCK_DURATION      (1)    ///< 1 second
 #define XAPP__INFO_PING_START          "PING %s (%s): %d data bytes"
 #define XAPP__MSG_FMT_RTT1              "%ld bytes from %s: "
@@ -51,6 +53,7 @@
 # define XAPP__ERR_MSG_OPT_ARG_REQ        "%s: option '--%s' requires an argument\n" XAPP__ERR_MSG_USAGE
 # define XAPP__ERR_MSG_OPT_VAL_SMALL      "%s: option value too small: %d\n"
 # define XAPP__ERR_MSG_OPT_UNRECOGNISED   "%s: unrecognized option '%s'\n" XAPP__ERR_MSG_USAGE
+# define XAPP__ERR_MSG_RECVMSG            "RxPacket::recvmsg failed"
 
 
 
@@ -73,7 +76,8 @@ typedef enum XAPP__retCode_e
     XAPP__enRetCode_ValidateRxPkt_WrongIpFrameLen,
     XAPP__enRetCode_ValidateRxPkt_IsRxAddrValidFailed,
     XAPP__enRetCode_RxPacket_Init,
-    XAPP__enRetCode_RxPacket_Failed,
+    XAPP__enRetCode_RxPacket_RecvMsg_Failed,
+    XAPP__enRetCode_RxPacket_NoMsg,
     XAPP__enRetCode_TxPacket_Init,
     XAPP__enRetCode_TxPacket_SendToFailed,
     XAPP__enRetCode_IsRxAddrValid_Init,
@@ -94,7 +98,6 @@ typedef enum XAPP__retCode_e
     XAPP__enRetCode_HandleOptionTtl_InvalidValue,
     XAPP__enRetCode_HandleOptionTtl_OptValueTooSmall,
     XAPP__enRetCode_Max
-
 }   XAPP__retCode_t;
 
 
@@ -166,6 +169,8 @@ typedef struct XAPP_s
     ssize_t             datalenRx;      ///< ip header + icmp header + payload size
     struct sockaddr_in  dstAddr;
     socklen_t           dstAddrLen;
+    struct iovec        msgRxIOvector[ XAPP__NBR_IO_VECTORS ];
+    struct msghdr       msgRx;
     char unsigned       recvBuf[XAPP__RX_BUFSZ];
     char                strText[XAPP__BUFSZ_TXTSTR];
     char                txAddrBuf[XAPP__BUFSZ_ADDR];
@@ -216,7 +221,9 @@ int     XAPP__IsRxAddrValid(XAPP_t * const me);
  * manage error state
  * set root privilege
  * set the proper load data according to iputeils ref.
- * remove ppoll
+ * [ x ] remove ppoll
+ * recompute the stddev - use of squareroot is not required, remove -lm
+ * check that socket recvd msg using flag -> MSG_DONT_WAIT
  * remove perror and replace with strerror or gai_strerror
  * use recvfrom, sendto
  * use gettimeofday

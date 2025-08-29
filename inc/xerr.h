@@ -10,7 +10,7 @@ typedef struct XERR_s
 {
     int   code;
     char *strMsg;
-} XERR_t;
+}   XERR_t;
 
 void XERR__HandleError(int retCode, char *progTitle);
 
